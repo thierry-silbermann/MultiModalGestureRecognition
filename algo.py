@@ -8,7 +8,6 @@ class VideoMat:
         
         mat = scipy.io.loadmat('%s_data.mat'%(sample)) 
 
-        self.video = mat['Video']
         self.numFrames = mat['Video']['NumFrames'][0][0][0][0]
         self.frameRate = mat['Video']['FrameRate'][0][0][0][0]
         self.frames = mat['Video']['Frames'][0][0][0]
