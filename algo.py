@@ -2,41 +2,51 @@ import scipy.io
 import numpy as np
 import numpy.matlib
 
-project_directory = '/home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition'
-training_directory = 'training1'
-sample = 'Sample00001'
-mat = scipy.io.loadmat('%s/%s/%s/%s_data.mat'%(project_directory, training_directory, sample, sample)) 
+class VideoMat:
 
-for key in mat.keys():
-    print "key: %s" % (key)
-    #print "value: %s" %(mydictionary[key]) #not a good idea to uncomment !
+    def __init__(self, project_dir, training_dir, sample):
+        
+        mat = scipy.io.loadmat('%s/%s/%s/%s_data.mat'%(project_dir, training_dir, sample, sample)) 
 
-"""
-key: __version__
-key: Video
-key: __header__
-key: __globals__
-"""
+        self.numFrames = mat['Video']['NumFrames'][0][0][0][0]
+        self.frameRate = mat['Video']['FrameRate'][0][0][0][0]
+        self.frames = mat['Video']['Frames'][0][0][0]
+        self.maxDepth = mat['Video']['MaxDepth'][0][0][0][0]
+        Labels = mat['Video']['Labels'][0][0][0]
+        labels = [0] * 20
+        for i in range(Labels.shape[0]):
+            name = str(Labels[i]['Name'][0])
+            begin = Labels[i]['Begin'][0][0]
+            end = Labels[i]['End'][0][0]
+            labels[i] = [name, (begin, end)]
+        self.labels = labels
+        
 
-Video_info = mat['Video']
+def main():
+    project_dir = '/home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition'
+    training_dir = 'training1'
+    sample = 'Sample00001'
 
-print mat['Video'].dtype
-#[('NumFrames', 'O'), ('FrameRate', 'O'), ('Frames', 'O'), ('MaxDepth', 'O'), ('Labels', 'O')]
-
-NumFrames = mat['Video']['NumFrames'][0][0][0][0]
-FrameRate = mat['Video']['FrameRate'][0][0][0][0]
-
-Frames = mat['Video']['Frames'][0][0][0]
-
-print Frames.shape
-# (1254,)
-
-for frame in Frames:
-    curr_frame = frame['Skeleton'][0][0]
-
-    World_Position = curr_frame['WorldPosition'] #numpy array (20,3)
-    World_Rotation = curr_frame['WorldRotation'] #numpy array (20,4)
-    Joint_Type = curr_frame['JointType'] #numpy array (20, 1)
-    Pixel_Position = curr_frame['PixelPosition'] #numpy array (20, 2)
+    a = VideoMat(project_dir, training_dir, sample)
     
-print 'End'
+    for frame in a.frames:
+        curr_frame = frame['Skeleton'][0][0]
+
+        #WorldPosition: The world coordinates position structure represents the global position of a tracked joint.
+         #The X value represents the x-component of the subject global position (in millimeters).
+         #The Y value represents the y-component of the subject global position (in millimeters).
+         #The Z value represents the z-component of the subject global position (in millimeters).
+        World_Position = curr_frame['WorldPosition'] #numpy array (20,3)
+        
+        #WorldRotation: The world rotation structure contains the orientations of 
+        #skeletal bones in terms of absolute transformations. The world rotation 
+        #structure provides the orientation of a bone in the 3D camera space. 
+        #Is formed by 20x4 matrix, where each row contains the W, X, Y, Z values of 
+        #the quaternion related to the rotation. 
+        World_Rotation = curr_frame['WorldRotation'] #numpy array (20,4)
+        
+        Joint_Type = curr_frame['JointType'] #numpy array (20, 1)
+        Pixel_Position = curr_frame['PixelPosition'] #numpy array (20, 2)
+    
+main()
+
