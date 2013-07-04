@@ -8,24 +8,29 @@ class VideoMat:
         
         mat = scipy.io.loadmat('%s_data.mat'%(sample)) 
 
+        self.video = mat['Video']
         self.numFrames = mat['Video']['NumFrames'][0][0][0][0]
         self.frameRate = mat['Video']['FrameRate'][0][0][0][0]
         self.frames = mat['Video']['Frames'][0][0][0]
         self.maxDepth = mat['Video']['MaxDepth'][0][0][0][0]
-        Labels = mat['Video']['Labels'][0][0][0]
-        labels = [0] * 20
-        for i in range(Labels.shape[0]):
-            name = str(Labels[i]['Name'][0])
-            begin = Labels[i]['Begin'][0][0]
-            end = Labels[i]['End'][0][0]
-            labels[i] = [name, (begin, end)]
-        self.labels = labels
+        
+        if('training' in sample): # no label for validation set, only for training
+            Labels = mat['Video']['Labels'][0][0][0]
+            labels = [0] * 20
+            for i in range(Labels.shape[0]):
+                name = str(Labels[i]['Name'][0])
+                begin = Labels[i]['Begin'][0][0]
+                end = Labels[i]['End'][0][0]
+                labels[i] = [name, (begin, end)]
+            self.labels = labels
+        else:
+            self.labels = None
         
 
 def main():
     project_dir = '/home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition'
-    training_dir = 'training1'
-    sample = 'Sample00001'
+    training_dir = 'validation1'
+    sample = 'Sample00410'
 
     a = VideoMat(project_dir+'/'+training_dir+'/'+sample+'/'+sample)
     
