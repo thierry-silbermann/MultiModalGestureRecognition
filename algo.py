@@ -4,9 +4,9 @@ import numpy.matlib
 
 class VideoMat:
 
-    def __init__(self, project_dir, training_dir, sample):
+    def __init__(self, sample):
         
-        mat = scipy.io.loadmat('%s/%s/%s/%s_data.mat'%(project_dir, training_dir, sample, sample)) 
+        mat = scipy.io.loadmat('%s_data.mat'%(sample)) 
 
         self.numFrames = mat['Video']['NumFrames'][0][0][0][0]
         self.frameRate = mat['Video']['FrameRate'][0][0][0][0]
@@ -27,7 +27,7 @@ def main():
     training_dir = 'training1'
     sample = 'Sample00001'
 
-    a = VideoMat(project_dir, training_dir, sample)
+    a = VideoMat(project_dir+'/'+training_dir+'/'+sample+'/'+sample)
     
     for frame in a.frames:
         curr_frame = frame['Skeleton'][0][0]
