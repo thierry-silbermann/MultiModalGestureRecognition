@@ -13,7 +13,7 @@ sound part
     algo.py
     algo_sound.py
 
-    to install FANN library in C: http://leenissen.dk/fann/wp/download/
+    install FANN library in C: http://leenissen.dk/fann/wp/download/
 
     - Change path in function getAllWav() and main()
     - verify that there is no 'sound_validation.data' file in cpp/
