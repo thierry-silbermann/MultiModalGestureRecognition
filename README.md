@@ -1,10 +1,26 @@
+TODO
+----
+create json file with local path to avoid conflict when push
+
+
 folder structure
 ----------------
 
 put the original dat in:
 data/raw_data/
 
+Mouvement part
+----------
+    For now the program only show plot of joint movement. 
+    The red and green line represent the beginning and ending (respectively) given by
+    the data in the .mat file for each sample.
 
+    You need:
+    algo.py
+    algo_move.py
+    
+    - Change path in function getAllWav()
+    - launch 'python algo_move.py'
 
 sound part
 ----------
