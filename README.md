@@ -12,9 +12,11 @@ sound part
     You need:
     algo.py
     algo_sound.py
-
+    algo_create_submission.py
+    
     install FANN library in C: http://leenissen.dk/fann/wp/download/
-
+    and all the file in cpp/
+    
     - Change path in function getAllWav() and main()
     - verify that there is no 'sound_validation.data' file in cpp/
     - launch 'python algo_sound.py'
