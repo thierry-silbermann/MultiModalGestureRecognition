@@ -92,8 +92,7 @@ def getOneWav():
     return [project_dir+'/'+training_dir+'/'+sample+'/'+sample]
 
 def plot(array, joints, labels):
-    
-    
+
     size = len(array)
     
     for data in array:
@@ -112,11 +111,33 @@ def plot(array, joints, labels):
                     plt.axvline(x=(tup[1]-1), color='g')
             #plt.axis([0, 1254, -1, 1])
             
+            #Comment next two lines if you don't want full size screen plot
             mng = plt.get_current_fig_manager()
             mng.resize(*mng.window.maxsize())
             
             plt.show()
 
+def plot_all_joint_from_one_sample(sk):
+    print 'WorldPosition XYZ'
+    plot(sk.WP, sk.joints, sample.labels)
+    print 'WorldRotation XYZW' 
+    plot(sk.WR, sk.joints, sample.labels)
+    print 'PixelPosition 1 and 2'
+    plot(sk.PP, sk.joints, sample.labels)
+    
+def plot_one_joint_from_batch_sample(joint_batch):
+    batch = len(joint_batch)
+    plt.figure(1)
+    
+    for index, (sk, sample) in enumerate(joint_batch):
+        #get specific joint
+        data = sk.WP[0] # Keep joint on WP_X
+        plt.subplot(batch * 100 + 10 + index + 1)
+        plt.plot(data)
+        
+    mng = plt.get_current_fig_manager()
+    mng.resize(*mng.window.maxsize())
+    plt.show()
 
 def main():
 
@@ -125,18 +146,21 @@ def main():
     wav_list = getAllWav()
     #wav_list = getOneWav() # for testing purpose
     
-    for wav in wav_list:
+    batch = 4 # maximum for batch size is 9
+    joint_batch = [0]*batch
+    
+    for index, wav in enumerate(wav_list):
         path = re.sub('\_audio.wav$', '', wav)
         print path
         
         sample = VideoMat(path)
         sk = Skelet(sample)
         
-        print 'WorldPosition XYZ'
-        plot(sk.WP, sk.joints, sample.labels)
-        print 'WorldRotation XYZW' 
-        plot(sk.WR, sk.joints, sample.labels)
-        print 'PixelPosition 1 and 2'
-        plot(sk.PP, sk.joints, sample.labels)
+        joint_batch[index%batch] = (sk, sample) 
+        #plot_all_joint_from_one_sample(sk, sample)
+        
+        if (index+1)%batch == 0:
+            plot_one_joint_from_batch_sample(joint_batch)
+   
 main()
 
