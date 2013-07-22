@@ -11,6 +11,7 @@ for line in f:
     output.write('%s,'%(Sample_id))
     for i in range(nb_of_gestures_per_file):
         b = a.readline()
+        #print 'b', b
         c = b[:-1].split(' ')
         index_high = -1
         highest = -2
@@ -20,9 +21,11 @@ for line in f:
                 highest = float(j)
                 index_high = index+1
         if i==nb_of_gestures_per_file-1:
-            output.write('%d'%(index_high))
+            if (highest > 0):
+                output.write('%d'%(index_high))
         else:
-            output.write('%d '%(index_high))
+            if (highest > 0):
+                output.write('%d '%(index_high))
     output.write('\n')
     
 f.close()

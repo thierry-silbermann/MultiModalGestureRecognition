@@ -4,13 +4,13 @@
 
 int main()
 {
-    int data_size = 16000; 
+    int data_size = 1100; 
     fann_type *calc_out;
     fann_type input[data_size];
 
-    struct fann *ann = fann_create_from_file("sound_float.net"); 
+    struct fann *ann = fann_create_from_file("movement_float.net"); 
 
-    static const char filename[] = "sound_validation.data";
+    static const char filename[] = "movement_validation.data";
     FILE *file = fopen ( filename, "r" );
     if ( file != NULL ) {
         char line [ 100000 ]; /* or other suitable maximum line size */

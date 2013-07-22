@@ -3,86 +3,56 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 import os
+import random
 import re
 import pickle
 from algo import VideoMat
+from Skelet import Skelet
 
-class Skelet:
 
-    def __init__(self, sample):
-    
-        nF = sample.numFrames
-        fR = sample.frameRate
-        
-        WorldPosition_X = np.zeros((nF,fR))
-        WorldPosition_Y = np.zeros((nF,fR))
-        WorldPosition_Z = np.zeros((nF,fR))
-        
-        WorldRotation_X = np.zeros((nF,fR))
-        WorldRotation_Y = np.zeros((nF,fR))
-        WorldRotation_Z = np.zeros((nF,fR))
-        WorldRotation_W = np.zeros((nF,fR))
-        
-        Position_1 = np.zeros((nF,fR))
-        Position_2 = np.zeros((nF,fR))
-        
-        joints = ['HipCenter', 'Spine', 'ShoulderCenter', 'Head', 'ShoulderLeft', 
-            'ElbowLeft', 'WristLeft', 'HandLeft', 'ShoulderRight', 'ElbowRight', 
-            'WristRight', 'HandRight', 'HipLeft', 'KneeLeft', 'AnkleLeft', 
-            'FootLeft', 'HipRight', 'KneeRight', 'AnkleRight', 'FootRight']
-        
-        for index_frame, frame in enumerate(sample.frames):
-            
-            curr_frame = frame['Skeleton'][0][0]
-            
-            Joint_Type = curr_frame['JointType']     #numpy.array(20,1)
-            dic_JT = {}
-            for index_jt, joint in enumerate(Joint_Type):
-                dic_JT[str(joint[0][0])] = index_jt
 
-            World_Position = np.transpose(curr_frame['WorldPosition']) #numpy.array(20,3)
-            World_Rotation = np.transpose(curr_frame['WorldRotation']) #numpy.array(20,4)
-            Pixel_Position = np.transpose(curr_frame['PixelPosition']) #numpy.array(20,2)
-            
-            if len(dic_JT)!=1:
-                for index_joint, i in enumerate(joints):
-                    WorldPosition_X[index_frame][index_joint] = World_Position[0][dic_JT[i]]
-                    WorldPosition_Y[index_frame][index_joint] = World_Position[1][dic_JT[i]]
-                    WorldPosition_Z[index_frame][index_joint] = World_Position[2][dic_JT[i]]
-                
-                    WorldRotation_X[index_frame][index_joint] = World_Rotation[0][dic_JT[i]]
-                    WorldRotation_Y[index_frame][index_joint] = World_Rotation[1][dic_JT[i]]
-                    WorldRotation_Z[index_frame][index_joint] = World_Rotation[2][dic_JT[i]]
-                    WorldRotation_W[index_frame][index_joint] = World_Rotation[3][dic_JT[i]]
-                    
-                    Position_1[index_frame][index_joint] = Pixel_Position[0][dic_JT[i]]
-                    Position_2[index_frame][index_joint] = Pixel_Position[1][dic_JT[i]]
+import pylab
 
-            if(World_Position.shape != (3, 20)):
-                print 'Error WP'
-            if(World_Rotation.shape != (4, 20)):
-                print 'Error WR'
-            if(Joint_Type.shape != (20, 1)):
-                print 'Error JT'
-            if(Pixel_Position.shape != (2, 20)):
-                print 'Error PP'
-        
-        
-        # WorldPosition, WorldRotation, Position with always the same format numFrames x 20
-        # Each joint is always in the same place in each matrix
-        self.joints = joints
-        self.WP = [WorldPosition_X, WorldPosition_Y, WorldPosition_Z]
-        self.WR = [WorldRotation_X, WorldRotation_Y, WorldRotation_Z, WorldRotation_W]
-        self.PP = [Position_1, Position_2]
-        
+def smoothListTriangle(list,strippedXs=False,degree=5):  
+    weight=[]  
+    window=degree*2-1  
+    smoothed=[0.0]*(len(list)-window)  
+    for x in range(1,2*degree):weight.append(degree-abs(degree-x))  
+    w=np.array(weight)  
+    for i in range(len(smoothed)):  
+        smoothed[i]=sum(np.array(list[i:i+window])*w)/float(sum(w))  
+    return smoothed  
 
-def getAllWav():
+def smoothListGaussian(list,strippedXs=False,degree=5):  
+
+    window=degree*2-1  
+    weight=np.array([1.0]*window)  
+    weightGauss=[]  
+     
+    for i in range(window):  
+        i=i-degree+1  
+        frac=i/float(window)  
+        gauss=1/(np.exp((4*(frac))**2))  
+        weightGauss.append(gauss)  
+         
+    weight=np.array(weightGauss)*weight  
+    smoothed=[0.0]*(len(list)-window)  
+     
+    for i in range(len(smoothed)):  
+        smoothed[i]=sum(np.array(list[i:i+window])*weight)/sum(weight)  
+    return smoothed  
+
+
+
+# Return a list of path of every wav file present in project_directory
+def getAllWav(flter):
     wav_list = []
     project_directory = '/home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition'
     for r,d,f in os.walk(project_directory):
         for files in f:
-            if files.endswith(".wav"):
+            if files.endswith(".wav") and flter in os.path.join(r,files):
                  wav_list.append(os.path.join(r,files))
+    random.shuffle(wav_list)
     return wav_list
     
 def getOneWav():
@@ -94,34 +64,56 @@ def getOneWav():
 def plot(array, joints, labels):
 
     size = len(array)
+    color = {'WristLeft':'g','HandLeft':'b',
+             'WristRight':'m','HandRight':'y'}
     
-    for data in array:
+    #['ElbowLeft', 'WristLeft', 'HandLeft', 'ElbowRight', 'WristRight', 'HandRight']
+    fig = plt.figure()
+    for index, data in enumerate(array):
         print '###################'
         data = np.transpose(data)
         for i in range(data.shape[0]):
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
-            print joints[i] #, np.mean(data[i]), np.std(data[i])
-            plt.plot(data[i], 'b.')
-            ax.set_title(joints[i])
-            for value in labels:
-                if value != 0: 
-                    name, tup = value
-                    plt.axvline(x=(tup[0]-1), color='r')
-                    plt.axvline(x=(tup[1]-1), color='g')
-            #plt.axis([0, 1254, -1, 1])
             
-            #Comment next two lines if you don't want full size screen plot
-            mng = plt.get_current_fig_manager()
-            mng.resize(*mng.window.maxsize())
-            
-            plt.show()
+            if joints[i] in ['WristLeft', 'HandLeft', 'WristRight', 'HandRight']:
+                
+                
+                plt.subplot(size * 2 * 100 + 10 + 1 + 2*index)
+                ax = fig.add_subplot(size * 2 * 100 + 10 + 1 + 2*index)
+                #plt.plot(data[i], 'b.', ls='-')
+                a = np.abs(data[i]-np.median(data[i]))
+                b = smoothListGaussian(a)
+                plt.plot(b, color[joints[i]], ls='-')
+                ax.set_title(joints[i])
+                for value in labels:
+                    if value != 0: 
+                        name, tup = value
+                        #plt.axvline(x=(tup[0]-1), color='r')
+                        #plt.axvline(x=(tup[1]-1), color='g')
+                        plt.axvline(x=float(tup[1]-1+tup[0]-1)/2, color='r')
+                
+                
+                plt.subplot(size * 2 * 100 + 10 + 2 + 2*index)
+                plt.plot(data[i], color[joints[i]], ls='-')
+                #print mlpy.findpeaks_dist(data[i], mindist=30)
+                #print [float(tup[1]-1+tup[0]-1)/2 for (name, tup) in labels]
+                for value in labels:
+                    if value != 0: 
+                        name, tup = value
+                        #plt.axvline(x=(tup[0]-1), color='r')
+                        #plt.axvline(x=(tup[1]-1), color='g')
+                        plt.axvline(x=float(tup[1]-1+tup[0]-1)/2, color='r')
+                
+                #Comment next two lines if you don't want full size screen plot
+                mng = plt.get_current_fig_manager()
+                mng.resize(*mng.window.maxsize())
+                
+    plt.show()
 
-def plot_all_joint_from_one_sample(sk):
+def plot_all_joint_from_one_sample(sk, sample):
     print 'WorldPosition XYZ'
-    plot(sk.WP, sk.joints, sample.labels)
+    #plot(sk.WP, sk.joints, sample.labels)
     print 'WorldRotation XYZW' 
-    plot(sk.WR, sk.joints, sample.labels)
+    #plot(sk.WR, sk.joints, sample.labels)
     print 'PixelPosition 1 and 2'
     plot(sk.PP, sk.joints, sample.labels)
     
@@ -131,10 +123,28 @@ def plot_one_joint_from_batch_sample(joint_batch):
     
     for index, (sk, sample) in enumerate(joint_batch):
         #get specific joint
-        data = sk.WP[0] # Keep joint on WP_X
-        plt.subplot(batch * 100 + 10 + index + 1)
-        plt.plot(data)
+        data = sk.WP[1] ###### Keep joint on WP_X
+        data = np.transpose(data)
         
+        joints = ['HipCenter', 'Spine', 'ShoulderCenter', 'Head', 'ShoulderLeft', 
+            'ElbowLeft', 'WristLeft', 'HandLeft', 'ShoulderRight', 'ElbowRight', 
+            'WristRight', 'HandRight', 'HipLeft', 'KneeLeft', 'AnkleLeft', 
+            'FootLeft', 'HipRight', 'KneeRight', 'AnkleRight', 'FootRight']
+        
+        i = 6 ###### joint[i]
+        plt.subplot(batch * 100 + 10 + index + 1)
+        if sample.labels != None:
+            for value in sample.labels:
+                if value != 0: 
+                    name, tup = value
+                    #plt.axvline(x=float(tup[1]-1+tup[0]-1)/2, color='r') #middle
+                    plt.axvline(x=float(tup[1]-1), color='r') #beginning
+                    
+        #plt.plot(data[i]-np.median(data[i]))
+        plt.plot(np.abs(data[i]-np.median(data[i])))
+        
+        #plt.ylim([-0.5,0.5]) # For WP and WR
+        #plt.ylim([0,50]) # For PP
     mng = plt.get_current_fig_manager()
     mng.resize(*mng.window.maxsize())
     plt.show()
@@ -143,7 +153,7 @@ def main():
 
     
     #wav_list = pickle.load(open('vrac/All_WAV_List.pkl','rb')) 
-    wav_list = getAllWav()
+    wav_list = getAllWav('training')
     #wav_list = getOneWav() # for testing purpose
     
     batch = 4 # maximum for batch size is 9
@@ -156,11 +166,13 @@ def main():
         sample = VideoMat(path)
         sk = Skelet(sample)
         
-        joint_batch[index%batch] = (sk, sample) 
-        #plot_all_joint_from_one_sample(sk, sample)
+        plot_all_joint_from_one_sample(sk, sample)
         
-        if (index+1)%batch == 0:
-            plot_one_joint_from_batch_sample(joint_batch)
+        #joint_batch[index%batch] = (sk, sample) 
+        #if (index+1)%batch == 0:
+        #    plot_one_joint_from_batch_sample(joint_batch)
+        #if index+1%40 == 0:
+        #    break
    
 main()
 
