@@ -42,7 +42,7 @@ def skeletion_from_mat(mat):
     return df[df.JointType != '[]']
 
 
-@memory.cache
+#@memory.cache
 def skeletion_from_archive(filename, is_test=False, verbose=False):
 
     file_path = 'data/raw_data/' + filename + '.tar.gz'
@@ -79,6 +79,7 @@ def skeletion_from_archive(filename, is_test=False, verbose=False):
         # magic trick to save memory
         tar_file.members = []
     return df
+skeletion_from_archive_cached = memory.cache(skeletion_from_archive)
 
 
 def extract_skeletion_from_files(file_names=['training1',
@@ -89,12 +90,12 @@ def extract_skeletion_from_files(file_names=['training1',
                                              'validation2',
                                              'validation3'], is_test=False):
 
-    #from preprocessing import skeletion_from_archive
-    #Parallel(n_jobs=2, verbose=5)(
-    #  delayed(skeletion_from_archive)(file_name, is_test=True) for file_name in file_names)
+    from preprocessing import skeletion_from_archive_cached
+    Parallel(n_jobs=-1, verbose=5)(
+      delayed(skeletion_from_archive_cached)(file_name) for file_name in file_names)
 
-    for file_name in file_names:
-        skeletion_from_archive(file_name, is_test=is_test)
+   # for file_name in file_names:
+   #     skeletion_from_archive(file_name, is_test=is_test)
 
 
 if __name__ == '__main__':
