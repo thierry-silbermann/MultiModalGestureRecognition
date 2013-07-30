@@ -6,7 +6,7 @@ import tarfile
 import zipfile
 import scipy.io
 import os
-from joblib import Memory
+from joblib import Memory, Parallel, delayed
 memory = Memory('cache/')
 
 
@@ -43,8 +43,10 @@ def skeletion_from_mat(mat):
 
 
 @memory.cache
-def skeletion_from_archive(file_path, is_test=False, verbose=False):
+def skeletion_from_archive(filename, is_test=False, verbose=False):
 
+    file_path = 'data/raw_data/' + filename + '.tar.gz'
+    print file_path
     df = DataFrame()
     tar_file = tarfile.open(file_path, 'r:gz')
 
@@ -79,14 +81,22 @@ def skeletion_from_archive(file_path, is_test=False, verbose=False):
     return df
 
 
+def extract_skeletion_from_files(file_names=['training1',
+                                             'training2',
+                                             'training3',
+                                             'training4',
+                                             'validation1',
+                                             'validation2',
+                                             'validation3'], is_test=False):
+
+    #from preprocessing import skeletion_from_archive
+    #Parallel(n_jobs=2, verbose=5)(
+    #  delayed(skeletion_from_archive)(file_name, is_test=True) for file_name in file_names)
+
+    for file_name in file_names:
+        skeletion_from_archive(file_name, is_test=is_test)
+
+
 if __name__ == '__main__':
 
-    for i in range(1, 5):
-        file_path = 'data/raw_data/training%i.tar.gz' % i
-        print file_path
-        train = skeletion_from_archive(file_path)
-
-    #file_path = 'data/raw_data/training1.tar.gz'
-    #file_path = 'data/raw_data/validation1.tar.gz'
-    #train = skeletion_from_archive(file_path, is_test=True, verbose=True)
-    #train.save('data/test1_skeletion.df')
+    extract_skeletion_from_files()
