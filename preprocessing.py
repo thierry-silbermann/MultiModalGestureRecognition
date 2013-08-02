@@ -127,6 +127,20 @@ def preprocessed_skeleton(file_name, demain=True, keep_only_top_40=True, drop_lo
     return df
 
 
+@memory.cache
+def aggregated_skeletion(file_names=['training1', 'training2', 'training3',
+                                    'training4'], agg_functions=['mean']):
+    X = DataFrame()
+
+    for file_name in file_names:
+        df = preprocessed_skeleton(file_name)
+        df.drop('frame')
+        df = df.groupby(['sample_id', 'gesture', 'JointType']).agg(agg_functions).unstack('JointType')
+        X = pd.concat([X, df])
+    y = np.array([gesture for (sample_id, gesture) in X.index])
+    return X, y
+
+
 if __name__ == '__main__':
 
     extract_skeletion_from_files()
