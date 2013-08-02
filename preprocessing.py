@@ -98,6 +98,35 @@ def extract_skeletion_from_files(file_names=['training1',
    #     skeletion_from_archive(file_name, is_test=is_test)
 
 
+@memory.cache
+def preprocessed_skeleton(file_name, demain=True, keep_only_top_40=True, drop_lower_joints=True):
+
+    df = skeletion_from_archive_cached(file_name)
+
+    if demain:
+        def demean(arr):
+            arr[arr.columns[4:]] = arr[arr.columns[4:]] - arr[arr.columns[4:]].mean()
+            return arr #- arr.mean()
+
+        df = df.groupby('sample_id').apply(demean)
+
+    if keep_only_top_40:
+        def get_top(arr, n=40, column='frame'):
+            start_frame = arr.frame.min()
+            return arr[ (arr.frame < start_frame + n) | (arr.gesture == 'break')]
+
+        # make sure each gesture appears only once in each sequence!!!
+        df = df.groupby(df.gesture + df.sample_id, group_keys=False).apply(get_top)
+
+    if drop_lower_joints:
+        joints_to_drop = ['KneeLeft', 'AnkleLeft',
+           'FootLeft', 'HipRight', 'KneeRight', 'AnkleRight', 'FootRight']
+
+        for joint in joints_to_drop:
+            df = df[df.JointType != joint]
+    return df
+
+
 if __name__ == '__main__':
 
     extract_skeletion_from_files()
