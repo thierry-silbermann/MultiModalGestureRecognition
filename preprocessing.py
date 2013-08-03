@@ -110,13 +110,34 @@ def preprocessed_skeleton(file_name, demain=True, keep_only_top_40=True, drop_lo
 
         df = df.groupby('sample_id').apply(demean)
 
+    def add_train_id(df):
+        df = df.sort('frame')
+        gestures = iter(df.gesture)
+        last = gestures.next()
+        count = 0
+        gest_i = []
+        gest_i.append(count)
+        for gest in gestures:
+            if gest == last:
+                gest_i.append(str(count))
+                last = gest
+
+            else:
+                count += 1
+                gest_i.append(str(count))
+                last = gest
+        df['gesture_nr'] = np.array(gest_i)
+        return df
+    df = df.groupby('sample_id').apply(add_train_id)
+
     if keep_only_top_40:
         def get_top(arr, n=40, column='frame'):
             start_frame = arr.frame.min()
             return arr[ (arr.frame < start_frame + n) | (arr.gesture == 'break')]
 
         # make sure each gesture appears only once in each sequence!!!
-        df = df.groupby(df.gesture + df.sample_id, group_keys=False).apply(get_top)
+        df = df.groupby(df.gesture + df.sample_id + df.gesture_nr,
+                group_keys=False).apply(get_top)
 
     if drop_lower_joints:
         joints_to_drop = ['KneeLeft', 'AnkleLeft',
@@ -124,6 +145,7 @@ def preprocessed_skeleton(file_name, demain=True, keep_only_top_40=True, drop_lo
 
         for joint in joints_to_drop:
             df = df[df.JointType != joint]
+
     return df
 
 
@@ -135,9 +157,10 @@ def aggregated_skeletion(file_names=['training1', 'training2', 'training3',
     for file_name in file_names:
         df = preprocessed_skeleton(file_name)
         df.drop('frame')
-        df = df.groupby(['sample_id', 'gesture', 'JointType']).agg(agg_functions).unstack('JointType')
+        df = df.groupby(['sample_id', 'gesture', 'JointType', 'gesture_nr']
+                ).agg(agg_functions).unstack('JointType')
         X = pd.concat([X, df])
-    y = np.array([gesture for (sample_id, gesture) in X.index])
+    y = np.array([gesture for (_, gesture, _) in X.index])
     return X, y
 
 
