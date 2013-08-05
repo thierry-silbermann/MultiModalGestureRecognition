@@ -99,6 +99,24 @@ def extract_skeletion_from_files(file_names=['training1',
 
 
 @memory.cache
+def sequence_truth(file_names=['training1',
+                               'training2',
+                               'training3',
+                               'training4']):
+    sequence_gestures = {}
+    for file_name in file_names:
+
+        df = skeletion_from_archive_cached(file_name)
+        grouped = df.groupby('sample_id')
+
+
+        for sample_id, group in grouped:
+            group.sort('frame', inplace=True)
+            sequence_gestures[sample_id] = group.gesture.unique().tolist()
+    return sequence_gestures
+
+
+@memory.cache
 def preprocessed_skeleton(file_name, demain=True, keep_only_top_40=True,
         train_id=True, drop_lower_joints=True, dummy_gesture=False):
 
@@ -160,7 +178,7 @@ def preprocessed_skeleton(file_name, demain=True, keep_only_top_40=True,
 
             while w_end < end_:
                 df_w = df[(df.frame >= w_start) & (df.frame <= w_end)]
-                df_w['gesture'] = w_start
+                df_w['dummy_gesture'] = w_start
                 windows = pd.concat([windows, df_w], axis=0)
 
                 w_start += window_increment
@@ -173,14 +191,15 @@ def preprocessed_skeleton(file_name, demain=True, keep_only_top_40=True,
 
 
 @memory.cache
-def aggregated_skeletion_win(file_names=['validation1'], agg_functions=['mean']):
+def aggregated_skeletion_win(file_names=['validation1'],
+        agg_functions=['median', 'var']):
     X = DataFrame()
 
     for file_name in file_names:
         df = preprocessed_skeleton(file_name, keep_only_top_40=False,
              train_id=False, dummy_gesture=True)
         df.drop('frame')
-        df = df.groupby(['sample_id', 'gesture', 'JointType']
+        df = df.groupby(['sample_id', 'dummy_gesture', 'JointType']
                 ).agg(agg_functions).unstack('JointType')
         X = pd.concat([X, df])
     return X
