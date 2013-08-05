@@ -99,36 +99,40 @@ def extract_skeletion_from_files(file_names=['training1',
 
 
 @memory.cache
-def preprocessed_skeleton(file_name, demain=True, keep_only_top_40=True, drop_lower_joints=True):
+def preprocessed_skeleton(file_name, demain=True, keep_only_top_40=True,
+        train_id=True, drop_lower_joints=True, dummy_gesture=False):
 
     df = skeletion_from_archive_cached(file_name)
 
     if demain:
         def demean(arr):
-            arr[arr.columns[4:]] = arr[arr.columns[4:]] - arr[arr.columns[4:]].mean()
+            num_cols =  ['w_r', 'x_p', 'x_pix', 'x_r', 'y_p', 'y_pix',
+                    'y_r', 'z_p', 'z_r']
+            arr[num_cols] = arr[num_cols] - arr[num_cols].mean()
             return arr #- arr.mean()
 
         df = df.groupby('sample_id').apply(demean)
 
-    def add_train_id(df):
-        df = df.sort('frame')
-        gestures = iter(df.gesture)
-        last = gestures.next()
-        count = 0
-        gest_i = []
-        gest_i.append(count)
-        for gest in gestures:
-            if gest == last:
-                gest_i.append(str(count))
-                last = gest
+    if train_id:
+        def add_train_id(df):
+            df = df.sort('frame')
+            gestures = iter(df.gesture)
+            last = gestures.next()
+            count = 0
+            gest_i = []
+            gest_i.append(count)
+            for gest in gestures:
+                if gest == last:
+                    gest_i.append(str(count))
+                    last = gest
 
-            else:
-                count += 1
-                gest_i.append(str(count))
-                last = gest
-        df['gesture_nr'] = np.array(gest_i)
-        return df
-    df = df.groupby('sample_id').apply(add_train_id)
+                else:
+                    count += 1
+                    gest_i.append(str(count))
+                    last = gest
+            df['gesture_nr'] = np.array(gest_i)
+            return df
+        df = df.groupby('sample_id').apply(add_train_id)
 
     if keep_only_top_40:
         def get_top(arr, n=40, column='frame'):
@@ -145,6 +149,25 @@ def preprocessed_skeleton(file_name, demain=True, keep_only_top_40=True, drop_lo
 
         for joint in joints_to_drop:
             df = df[df.JointType != joint]
+
+    if dummy_gesture:
+        def add_dummy_gestures(df, window_length=40, window_increment=5):
+            start_ = df.frame.min()
+            end_ = df.frame.max()
+            w_start = start_
+            w_end = w_start + window_length
+            windows = DataFrame()
+
+            while w_end < end_:
+                df_w = df[(df.frame >= w_start) & (df.frame <= w_end)]
+                df_w['gesture'] = w_start
+                windows = pd.concat([windows, df_w], axis=0)
+
+                w_start += window_increment
+                w_end += window_increment
+
+            return windows
+        df= df.groupby('sample_id', group_keys=False).apply(add_dummy_gestures)
 
     return df
 
