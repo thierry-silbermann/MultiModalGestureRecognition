@@ -33,13 +33,13 @@ def compute_score(filename1, filename2):
     sum_ = 0
     total = 0
     while(line_file1 != ''):
-        total += 1
         arr_1 = line_file1[:-1].split(',')
         arr_1 = arr_1[1].split(' ')
         
         arr_2 = line_file2[:-1].split(',')
         arr_2 = arr_2[1].split(' ')
         
+        total += len(arr_2)
         sum_ += levenshtein(arr_1, arr_2)
         #print arr_1, arr_2, levenshtein(arr_1, arr_2)
         
@@ -50,5 +50,5 @@ def compute_score(filename1, filename2):
 
 test()
 #print compute_score('training_prediction.csv', 'Submission_training.csv')
-sum_, total, score = compute_score('test/t1.csv', 'test/t2.csv')
+sum_, total, score = compute_score('Submission2.csv', 'training.csv') #the second file need to be the truth value file for gestures
 print score
