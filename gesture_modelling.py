@@ -33,3 +33,15 @@ def trained_rf(file_names=['training1', 'training2', 'training3',
         clf = joblib.load(filename)
 
     return clf
+
+
+def dump_predictions(df, out_path='pred.csv'):
+
+    grouped = df.groupby('sample_id')
+
+    with open(out_path, 'w') as f:
+        for sample_id, group in grouped:
+            gestures = group.sort('frame').drop_duplicates('gesture')
+            gestures = ' '.join([str(gesture_to_id[gest]) for gest in gestures.gesture if gesture_to_id[gest] > 0])
+            out = sample_id[-4:] + ',' + gestures + '\n'
+            f.write(out)
