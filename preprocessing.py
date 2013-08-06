@@ -103,17 +103,12 @@ def sequence_truth(file_names=['training1',
                                'training2',
                                'training3',
                                'training4']):
-    sequence_gestures = {}
+    df_out = DataFrame()
     for file_name in file_names:
-
         df = skeletion_from_archive_cached(file_name)
-        grouped = df.groupby('sample_id')
-
-
-        for sample_id, group in grouped:
-            group.sort('frame', inplace=True)
-            sequence_gestures[sample_id] = group.gesture.unique().tolist()
-    return sequence_gestures
+        df = df[['frame', 'gesture', 'sample_id']].dropna().drop_duplicates()
+        df_out = pd.concat((df_out, df))
+    return df_out
 
 
 @memory.cache
