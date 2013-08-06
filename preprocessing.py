@@ -86,9 +86,9 @@ def extract_skeletion_from_files(file_names=['training1',
                                              'training2',
                                              'training3',
                                              'training4',
-                                             'validation1',
-                                             'validation2',
-                                             'validation3'], is_test=False):
+                                             'validation1_lab',
+                                             'validation2_lab',
+                                             'validation3_lab'], is_test=False):
 
     from preprocessing import skeletion_from_archive_cached
     Parallel(n_jobs=-1, verbose=5)(
