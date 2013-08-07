@@ -19,7 +19,7 @@ def trained_rf(file_names=['training1', 'training2', 'training3',
 
     if recompute:
         X, y = aggregated_skeletion(file_names=file_names,
-                agg_functions=['median', 'var'])
+                agg_functions=['median', 'var', 'min', 'max'])
         X = X.fillna(0)
         y = np.array([gesture_to_id[gest] for gest in y])
 
@@ -40,6 +40,7 @@ def dump_predictions(df, out_path='pred.csv', convert_to_id=True):
     grouped = df.groupby('sample_id')
 
     with open(out_path, 'w') as f:
+        f.write('Id,Sequence\n')
         for sample_id, group in grouped:
             gestures = group.sort('frame').drop_duplicates('gesture')
             if convert_to_id:
