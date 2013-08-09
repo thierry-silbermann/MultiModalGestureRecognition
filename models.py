@@ -1,6 +1,7 @@
 from gesture_modelling import gesture_to_id
 from gesture_modelling import dump_predictions
 from preprocessing import aggregated_skeletion
+from preprocessing import aggregated_skeletion_win
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.externals import joblib
 import pandas as pd
@@ -13,7 +14,6 @@ def leaderboard_model(out_file='leaderboard.csv', retrain=False):
     filename = 'cache/joblib/rf_leaderboard.joblib.pkl'
     file_names=['training1', 'training2', 'training3',
                                     'training4']
-    filename = 'cache/joblib/gesture_rf.joblib.pkl'
 
     if retrain:
         X, y = aggregated_skeletion(file_names=file_names,
@@ -29,7 +29,8 @@ def leaderboard_model(out_file='leaderboard.csv', retrain=False):
     else:
         clf = joblib.load(filename)
 
-    X_win = aggregated_skeletion_win(['validation1_lab', 'validation2_lab', 'validation3_lab'])
+    X_win = aggregated_skeletion_win(['validation1_lab', 'validation2_lab', 'validation3_lab'],
+            agg_functions=['median', 'var', 'min', 'max'])
 
     y_pred = clf.predict(X_win)
     df_pred = DataFrame.from_records(X_win.index.tolist(), columns=['sample_id', 'frame'])
