@@ -13,8 +13,7 @@ memory = Memory('cache/')
 def leaderboard_model(out_file='leaderboard.csv', retrain=False):
 
     filename = 'cache/joblib/rf_leaderboard.joblib.pkl'
-    file_names=['training1', 'training2', 'training3',
-                                    'training4']
+    file_names=['training1', 'training2', 'training3', 'training4']
 
     if retrain:
         X, y = aggregated_skeletion(file_names=file_names,
@@ -46,7 +45,7 @@ def eval_seq_model(out_file='eval_model.csv', retrain=False):
 
     filename = 'cache/joblib/rf_eval_model.joblib.pkl'
     file_names=['training1', 'training3', 'training4', 
-            'validation1_lab', 'validation3_lab']
+                'validation1_lab', 'validation3_lab']
 
     if retrain:
         X, y = aggregated_skeletion(file_names=file_names,
@@ -78,7 +77,7 @@ def eval_gesture_model(retrain=False):
 
     filename = 'cache/joblib/rf_eval_model.joblib.pkl'
     file_names=['training1', 'training3', 'training4',
-            'validation1_lab', 'validation3_lab']
+                'validation1_lab', 'validation3_lab']
 
     if retrain:
         X, y = aggregated_skeletion(file_names=file_names,
@@ -106,7 +105,9 @@ if __name__ == '__main__':
     from models import leaderboard_model, eval_seq_model, eval_gesture_model
 
     #leaderboard_model(retrain=True)
+    leaderboard_model()
     #eval_seq_model(retrain=True)
-    eval_gesture_model(retrain=True)
+    eval_seq_model()
+    #eval_gesture_model(retrain=True)
     eval_gesture_model()
 

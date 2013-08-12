@@ -113,7 +113,8 @@ def sequence_truth(file_names=['training1',
 
 @memory.cache
 def preprocessed_skeleton(file_name, demain=True, keep_only_top_40=True,
-        train_id=True, drop_lower_joints=True, dummy_gesture=False):
+        train_id=True, drop_lower_joints=True, dummy_gesture=False,
+        window_shift=1):
 
     df = skeletion_from_archive_cached(file_name)
 
@@ -164,7 +165,8 @@ def preprocessed_skeleton(file_name, demain=True, keep_only_top_40=True,
             df = df[df.JointType != joint]
 
     if dummy_gesture:
-        def add_dummy_gestures(df, window_length=40, window_increment=5):
+        def add_dummy_gestures(df, window_length=40,
+                window_shift=window_shift):
             start_ = df.frame.min()
             end_ = df.frame.max()
             w_start = start_
@@ -176,8 +178,8 @@ def preprocessed_skeleton(file_name, demain=True, keep_only_top_40=True,
                 df_w['dummy_gesture'] = w_start
                 windows = pd.concat([windows, df_w], axis=0)
 
-                w_start += window_increment
-                w_end += window_increment
+                w_start += window_shift
+                w_end += window_shift
 
             return windows
         df= df.groupby('sample_id', group_keys=False).apply(add_dummy_gestures)
