@@ -77,7 +77,7 @@ def eval_seq_model(out_file='eval_model.csv', retrain=False):
 def eval_gesture_model(retrain=False):
 
     filename = 'cache/joblib/rf_eval_model.joblib.pkl'
-    file_names=['training1', 'training3', 'training4', 
+    file_names=['training1', 'training3', 'training4',
             'validation1_lab', 'validation3_lab']
 
     if retrain:
@@ -97,6 +97,7 @@ def eval_gesture_model(retrain=False):
     X_test, y_test = aggregated_skeletion(['validation2_lab', 'training2'],
             agg_functions=['median', 'var', 'min', 'max'])
     X_test = X_test.fillna(0)
+    y_test = np.array([gesture_to_id[gest] for gest in y_test])
     y_pred = clf.predict_proba(X_test)
     return y_pred, y_test
 
@@ -106,5 +107,6 @@ if __name__ == '__main__':
 
     #leaderboard_model(retrain=True)
     #eval_seq_model(retrain=True)
+    eval_gesture_model(retrain=True)
     eval_gesture_model()
 
