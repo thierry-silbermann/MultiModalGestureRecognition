@@ -189,12 +189,12 @@ def preprocessed_skeleton(file_name, demain=True, keep_only_top_40=True,
 
 @memory.cache
 def aggregated_skeletion_win(file_names=['validation1'],
-        agg_functions=['median', 'var']):
+        agg_functions=['median', 'var'], window_shift=1):
     X = DataFrame()
 
     for file_name in file_names:
         df = preprocessed_skeleton(file_name, keep_only_top_40=False,
-             train_id=False, dummy_gesture=True)
+             train_id=False, dummy_gesture=True, window_shift=window_shift)
         df.drop('frame')
         df = df.groupby(['sample_id', 'dummy_gesture', 'JointType']
                 ).agg(agg_functions).unstack('JointType')

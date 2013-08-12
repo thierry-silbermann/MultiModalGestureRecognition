@@ -10,10 +10,10 @@ memory = Memory('cache/')
 
 
 @memory.cache
-def leaderboard_model(out_file='leaderboard.csv', retrain=False):
+def leaderboard_model(out_file='leaderboard.csv',window_shift=1, retrain=False):
 
     filename = 'cache/joblib/rf_leaderboard.joblib.pkl'
-    file_names=['training1', 'training2', 'training3', 'training4']
+    file_names=['training1','training2', 'training3', 'training4']
 
     if retrain:
         X, y = aggregated_skeletion(file_names=file_names,
@@ -30,22 +30,23 @@ def leaderboard_model(out_file='leaderboard.csv', retrain=False):
         clf = joblib.load(filename)
 
     X_win = aggregated_skeletion_win(['validation1_lab', 'validation2_lab',
-        'validation3_lab'], agg_functions=['median', 'var', 'min', 'max'])
+        'validation3_lab'], agg_functions=['median', 'var', 'min', 'max'], 
+        window_shift=window_shift)
 
     y_pred = clf.predict_proba(X_win)
     df_pred = DataFrame(y_pred, index=[s for (s, _) in X_win.index])
 
     to_dump = df_pred.groupby(level=0).apply(postprocess)
     dump_predictions(to_dump, out_path=out_file)
-    return to_dump
+    return df_pred, to_dump
 
 
 @memory.cache
-def eval_seq_model(out_file='eval_model.csv', retrain=False):
+def eval_seq_model(out_file='eval_model.csv',window_shift=1, retrain=False):
 
     filename = 'cache/joblib/rf_eval_model.joblib.pkl'
     file_names=['training1', 'training3', 'training4', 
-                'validation1_lab', 'validation3_lab']
+                    'validation1_lab', 'validation3_lab']
 
     if retrain:
         X, y = aggregated_skeletion(file_names=file_names,
@@ -62,22 +63,23 @@ def eval_seq_model(out_file='eval_model.csv', retrain=False):
         clf = joblib.load(filename)
 
     X_win = aggregated_skeletion_win(['validation2_lab', 'training2'],
-            agg_functions=['median', 'var', 'min', 'max'])
+            agg_functions=['median', 'var', 'min', 'max'],
+            window_shift=window_shift)
 
     y_pred = clf.predict_proba(X_win)
     df_pred = DataFrame(y_pred, index=[s for (s, _) in X_win.index])
 
     to_dump = df_pred.groupby(level=0).apply(postprocess)
     dump_predictions(to_dump, out_path=out_file)
-    return to_dump
+    return df_pred, to_dump
 
 
 @memory.cache
-def eval_gesture_model(retrain=False):
+def eval_gesture_model(retrain=False, window_shift=1):
 
     filename = 'cache/joblib/rf_eval_model.joblib.pkl'
     file_names=['training1', 'training3', 'training4',
-                'validation1_lab', 'validation3_lab']
+                    'validation1_lab', 'validation3_lab']
 
     if retrain:
         X, y = aggregated_skeletion(file_names=file_names,
@@ -94,7 +96,8 @@ def eval_gesture_model(retrain=False):
         clf = joblib.load(filename)
 
     X_test, y_test = aggregated_skeletion(['validation2_lab', 'training2'],
-            agg_functions=['median', 'var', 'min', 'max'])
+            agg_functions=['median', 'var', 'min', 'max'],
+            window_shift=window_shift)
     X_test = X_test.fillna(0)
     y_test = np.array([gesture_to_id[gest] for gest in y_test])
     y_pred = clf.predict_proba(X_test)
@@ -105,9 +108,12 @@ if __name__ == '__main__':
     from models import leaderboard_model, eval_seq_model, eval_gesture_model
 
     #leaderboard_model(retrain=True)
-    leaderboard_model()
+    leaderboard_model(window_shift=1)
+    leaderboard_model(window_shift=5)
     #eval_seq_model(retrain=True)
-    eval_seq_model()
+    eval_seq_model(retrain=False, window_shift=1)
+    eval_seq_model(retrain=False, window_shift=5)
     #eval_gesture_model(retrain=True)
-    eval_gesture_model()
+    eval_gesture_model(window_shift=1)
+    eval_gesture_model(window_shift=5)
 
