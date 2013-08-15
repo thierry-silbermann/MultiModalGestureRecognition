@@ -13,9 +13,9 @@ I deleted Sample0177 from the training file because the data looked really weird
 
 The library dependency are normally: numpy, scipy, scikit-learn
 The code was tested on Ubuntu 13.04 with:
-Python 2.7.4
-Numpy 1.7.1
-Scipy 0.11.0
+Python 2.7.4 / 
+Numpy 1.7.1 / 
+Scipy 0.11.0 / 
 Scikit-learn 0.13.1
 
 Any questions or problems? thierry.silbermann@gmail.com
@@ -26,6 +26,7 @@ Actual Model with Blending of 3 models
 ------------
 
     You need these classes (nothing need to be change in these 4 classes):
+    - Head_interaction.py
     - VideoMat.py
     - Skelet.py
     - mfcc.py
