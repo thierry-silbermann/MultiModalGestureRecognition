@@ -116,7 +116,7 @@ def sequence_truth(file_names=['training1',
 @memory.cache
 def preprocessed_skeleton(file_name, demain=True, keep_only_top_40=True,
         train_id=True, drop_lower_joints=True, dummy_gesture=False,
-        window_shift=1):
+        window_shift=1, window_length=40):
 
     df = skeletion_from_archive_cached(file_name)
 
@@ -151,7 +151,7 @@ def preprocessed_skeleton(file_name, demain=True, keep_only_top_40=True,
         df = df.groupby('sample_id').apply(add_train_id)
 
     if keep_only_top_40:
-        def get_top(arr, n=40, column='frame'):
+        def get_top(arr, n=window_length, column='frame'):
             start_frame = arr.frame.min()
             return arr[ (arr.frame < start_frame + n) | (arr.gesture == 'break')]
 
@@ -167,7 +167,7 @@ def preprocessed_skeleton(file_name, demain=True, keep_only_top_40=True,
             df = df[df.JointType != joint]
 
     if dummy_gesture:
-        def add_dummy_gestures(df, window_length=40,
+        def add_dummy_gestures(df, window_length=window_length,
                 window_shift=window_shift):
             start_ = df.frame.min()
             end_ = df.frame.max()
@@ -191,30 +191,33 @@ def preprocessed_skeleton(file_name, demain=True, keep_only_top_40=True,
 
 @memory.cache
 def aggregated_skeletion_win(file_names=['validation1'],
-        agg_functions=['median', 'var'], window_shift=1):
+        agg_functions=['median', 'var'], window_shift=1, window_length=40):
     X = DataFrame()
 
     for file_name in file_names:
         df = preprocessed_skeleton(file_name, keep_only_top_40=False,
-             train_id=False, dummy_gesture=True, window_shift=window_shift)
-        df.drop('frame')
+             train_id=False, dummy_gesture=True, window_shift=window_shift,
+             window_length=window_length)
+        df = df.drop('frame')
         df = df.groupby(['sample_id', 'dummy_gesture', 'JointType']
                 ).agg(agg_functions).unstack('JointType')
         X = pd.concat([X, df])
+        del df
     return X
 
 
 @memory.cache
 def aggregated_skeletion(file_names=['training1', 'training2', 'training3',
-                                    'training4'], agg_functions=['mean']):
+                    'training4'], agg_functions=['mean'], window_length=40):
     X = DataFrame()
 
     for file_name in file_names:
-        df = preprocessed_skeleton(file_name)
-        df.drop('frame')
+        df = preprocessed_skeleton(file_name, window_length=window_length)
+        df = df.drop('frame')
         df = df.groupby(['sample_id', 'gesture', 'JointType', 'gesture_nr']
                 ).agg(agg_functions).unstack('JointType')
         X = pd.concat([X, df])
+        del df
     y = np.array([gesture for (_, gesture, _) in X.index])
     return X, y
 

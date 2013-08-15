@@ -18,14 +18,18 @@ gesture_to_id = {'vieni':2, 'break':0, 'prend':14, 'sonos':20, 'chevu':6,
 
 
 @memory.cache
-def leaderboard_model(out_file='leaderboard.csv',window_shift=1, retrain=False):
+def leaderboard_model(out_file='leaderboard.csv',window_shift=1,
+        window_length=40, retrain=False,
+        train_on=['training1','training2', 'training3', 'training4'],
+        predict_on=['validation1_lab', 'validation2_lab', 'validation3_lab']):
 
-    filename = 'cache/joblib/rf_leaderboard.joblib.pkl'
-    file_names=['training1','training2', 'training3', 'training4']
+    filename = 'cache/joblib/rf_leaderboard' + str(window_length) + '.joblib.pkl'
+    #file_names=['training1','training2', 'training3', 'training4']
 
     if retrain:
-        X, y = aggregated_skeletion(file_names=file_names,
-                agg_functions=['median', 'var', 'min', 'max'])
+        X, y = aggregated_skeletion(file_names=train_on,
+                agg_functions=['median', 'var', 'min', 'max'],
+                window_length= window_length)
         X = X.fillna(0)
         y = np.array([gesture_to_id[gest] for gest in y])
 
@@ -37,9 +41,9 @@ def leaderboard_model(out_file='leaderboard.csv',window_shift=1, retrain=False):
     else:
         clf = joblib.load(filename)
 
-    X_win = aggregated_skeletion_win(['validation1_lab', 'validation2_lab',
-        'validation3_lab'], agg_functions=['median', 'var', 'min', 'max'], 
-        window_shift=window_shift)
+    X_win = aggregated_skeletion_win(predict_on,
+            agg_functions=['median', 'var', 'min', 'max'], 
+        window_shift=window_shift, window_length=window_length)
 
     X_win = X_win.fillna(0)
     y_pred = clf.predict_proba(X_win)
@@ -120,15 +124,19 @@ def eval_seq_model(out_file='eval_model.csv',window_shift=1, retrain=False):
 
 
 @memory.cache
-def eval_gesture_model(retrain=False, window_shift=1):
+def eval_gesture_model(retrain=False, window_shift=1, window_length=40,
+        train_on=['training1', 'training3', 'training4',
+                    'validation1_lab', 'validation3_lab'],
+        predict_on=['validation2_lab', 'training2']):
 
-    filename = 'cache/joblib/rf_eval_model.joblib.pkl'
-    file_names=['training1', 'training3', 'training4',
-                    'validation1_lab', 'validation3_lab']
+    filename = 'cache/joblib/rf_eval_model' + str(window_length) + '.joblib.pkl'
+    #file_names=['training1', 'training3', 'training4',
+    #                'validation1_lab', 'validation3_lab']
 
     if retrain:
-        X, y = aggregated_skeletion(file_names=file_names,
-                agg_functions=['median', 'var', 'min', 'max'])
+        X, y = aggregated_skeletion(file_names=train_on,
+                agg_functions=['median', 'var', 'min', 'max'],
+                window_length=window_length)
         X = X.fillna(0)
         y = np.array([gesture_to_id[gest] for gest in y])
 
@@ -140,8 +148,9 @@ def eval_gesture_model(retrain=False, window_shift=1):
     else:
         clf = joblib.load(filename)
 
-    X_test, y_test = aggregated_skeletion(['validation2_lab', 'training2'],
-            agg_functions=['median', 'var', 'min', 'max'])
+    X_test, y_test = aggregated_skeletion(predict_on,
+            agg_functions=['median', 'var', 'min', 'max'],
+        window_length=window_length)
     X_test = X_test.fillna(0)
     y_test = np.array([gesture_to_id[gest] for gest in y_test])
     y_pred = clf.predict_proba(X_test)
@@ -215,6 +224,28 @@ def collect_movement_intervalls(file_names=['training1', 'training2', 'training3
 if __name__ == '__main__':
     from models import leaderboard_model, eval_seq_model, eval_gesture_model
 
+    #leaderboard_model(out_file='leaderboard60_5.csv',window_shift=5,
+        #window_length=60, retrain=True)
+    #leaderboard_model(out_file='leaderboard50_5.csv',window_shift=5,
+        #window_length=50, retrain=True)
+    #leaderboard_model(out_file='leaderboard40_5.csv',window_shift=5,
+    #    window_length=40, retrain=False)
+    #leaderboard_model(out_file='leaderboard30_5.csv',window_shift=5,
+        #window_length=30, retrain=True)
+    #leaderboard_model(out_file='leaderboard20_5.csv',window_shift=5,
+        #window_length=20, retrain=True)
+
+    #eval_gesture_model(window_shift=5,
+      #  window_length=60, retrain=False)
+    #eval_gesture_model(window_shift=5,
+        #window_length=50, retrain=False)
+    #eval_gesture_model(window_shift=5,
+        #window_length=40, retrain=False)
+    #eval_gesture_model(window_shift=5,
+        #window_length=30, retrain=False)
+    #eval_gesture_model(window_shift=5,
+        #window_length=20, retrain=False)
+
     #leaderboard_model(retrain=True)
     #leaderboard_model(window_shift=1)
     #leaderboard_model(window_shift=5)
@@ -225,8 +256,10 @@ if __name__ == '__main__':
     #eval_gesture_model(window_shift=1)
     #eval_gesture_model(window_shift=5)
     from models import movement_interval, agg_movement_intervals, collect_movement_intervalls
+    movement_interval(window_shift=1, retrain=False,
+        train_on=['training1','training2', 'training3', 'training4'])
     #movement_interval()
     #agg_movement_intervals('training1')
-    collect_movement_intervalls(has_labels=True)
-    collect_movement_intervalls(file_names=['validation1_lab', 'validation2_lab',
-        'validation3_lab'], has_labels=True)
+    #collect_movement_intervalls(has_labels=True)
+    #collect_movement_intervalls(file_names=['validation1_lab', 'validation2_lab',
+    #    'validation3_lab'], has_labels=True)
