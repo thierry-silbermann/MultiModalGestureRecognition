@@ -14,7 +14,7 @@ import time
 
 from VideoMat import VideoMat
 from Skelet import Skelet
-from Head_interaction import Head_inter
+#from Head_interaction import Head_inter
 import mfcc as mf
 
 import numpy as np
@@ -437,9 +437,9 @@ def train_model_on_gestures(wav_list):
         sk = Skelet(sample)
         rate, data = get_data(wav)
         data_frame = np.asarray(create_features(data, sample.labels, sample.numFrames, sk))
+        #print 'data_frame !', data_frame.shape
         #data_frame2 = np.asarray(Head_inter(path, sample.labels).data_frame)
         #data_frame = np.hstack((data_frame, data_frame2))
-        
 
     # 1 target / 19 * 6 joints infos / 8 Head/Hand distances / 5 Head box = 128 features
     #Train model: Don't use the Head box features, don't really improve the model  
@@ -447,7 +447,8 @@ def train_model_on_gestures(wav_list):
     Y = np.asarray([gestures[i] for i in Y])
     X = data_frame[:, 1:]
     X = X.astype(np.float32, copy=False)
-    X = X[:, :123] #Should be 122
+    X = X[:, :122] 
+    #print 'gestures:', X.shape
     clf = RandomForestClassifier(n_estimators=300, criterion='entropy', min_samples_split=10, 
             min_samples_leaf=1, verbose=2, random_state=1) #n_jobs=2
     clf = clf.fit(X, Y)
@@ -531,12 +532,12 @@ def create_predicting_feature(path, wav, clf_gb, clf_rf, gradient_boosting_model
     labels = interval_analysis(labels, sk) 
     labels = [['', (beg, end)] for name, (beg, end) in labels if end-beg>10]
     data_frame = np.asarray(create_features(data, labels, sample.numFrames, sk))
-    data_frame2 = np.asarray(Head_inter(path, labels).data_frame)
+    #data_frame2 = np.asarray(Head_inter(path, labels).data_frame)
     #data_frame = np.hstack((data_frame, [str(end-beg) for name, (beg, end) in labels]))
-    data_frame = np.hstack((data_frame, data_frame2))
+    #data_frame = np.hstack((data_frame, data_frame2))
     X_test = np.asarray(data_frame)
-    print 'X_test', X_test.shape
-    X_test = X_test[:, 1:124]  
+    #print 'X_test', X_test.shape
+    X_test = X_test[:, 1:123]  
     X_test = X_test.astype(np.float32, copy=False)
     class_proba = gradient_boosting_model_gestures.predict_proba(X_test)
     
@@ -582,7 +583,7 @@ def blend_model(wav_list):
         class_proba, class_proba_gb, class_proba_rf, labels = create_predicting_feature(path, wav, clf_gb_sound, clf_rf_sound, clf_gb_gest)
         for i in range(class_proba.shape[0]):
             name, (beg, end) = labels[i]
-            output.write('%s,%d,%s,%s,%s\n' %(path[-4:], (end+beg)/2)
+            output.write('%s,%d,%s,%s,%s\n' %(path[-4:], (end+beg)/2, 
                                                       ','.join(  (map(str, class_proba[i]))), 
                                                       ','.join(  (map(str, class_proba_gb[i]))),
                                                       ','.join(  (map(str, class_proba_rf[i]))) ))
