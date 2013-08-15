@@ -13,29 +13,23 @@ data/raw_data/
 
 Actual Model with Blending of 3 models
 ------------
-    You need : pyplot, numpy, scipy, opencv, scikit-learn
+    You need : numpy, scipy, opencv, scikit-learn
     
     You need:
     
-    - algo.py
+    - VideoMat.py
     - Skelet.py
     - mfcc.py
     - mel.py
-    - Head_interaction.py
     
     - algo_multi_modal_v3.py
-    
-    - levenshtein.py
 
     Launch algo_multi_modal_v3.py:
-        It will do  #Features creation: 2159.95s = 36mn
-                    #Training on gestures: 18.77s
-                    #Features creation and training on sound: 15484.51s = 258mn = 4h18
-                    #Full prediction: 2481.75s = 41mn
+        It will do  #Features creation and training on gestures: 20mn
+                    #Features creation and training on sound: 4h18
+                    #Full prediction: 41mn
     Finish! You can now submit the newly created file 'Submission.csv'
     
-    You can verify your score with levenshtein.py
-
 #########################
 
 Bad samples

@@ -1,24 +1,22 @@
 import copy
 import math
-import matplotlib.pyplot as plt
-import mfcc as mf
-import numpy as np
 import os
 import pickle
 import random
 import re
-import scipy.io.wavfile
 import time
 
-from algo import VideoMat
+from VideoMat import VideoMat
 from Skelet import Skelet
-from Head_interaction import Head_inter
+#from Head_interaction import Head_inter
+import mfcc as mf
 
+import numpy as np
+import scipy.io.wavfile
 from scipy.signal import argrelextrema
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import ExtraTreesClassifier
-from numpy import recfromtxt
 
 def smooth_plus(x,window_len=50,window='hanning'):
 
@@ -43,9 +41,9 @@ def smooth_plus(x,window_len=50,window='hanning'):
 ###########
 # Return a list of path of every wav file present in project_directory
 
-def getAllWav(flter, isSorted):
+def getAllWav(flter, isSorted, root_directory):
     wav_list = []
-    project_directory = '/home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition'
+    project_directory = root_directory
     for r,d,f in os.walk(project_directory):
         for files in f:
             if files.endswith(".wav") and flter in os.path.join(r,files):
@@ -58,11 +56,8 @@ def getAllWav(flter, isSorted):
 
 ###########
 
-def getOneWav():
-    project_dir = '/home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition'
-    training_dir = 'validation2' #'training1' 
-    sample = 'Sample00583' #'Sample00001'
-    return [project_dir+'/'+training_dir+'/'+sample+'/'+sample+'_audio.wav']
+def getOneWav(root_directory, training_dir, sample):
+    return [root_directory+'/'+training_dir+'/'+sample+'/'+sample+'_audio.wav']
 
 ###########
 
@@ -204,7 +199,7 @@ def euclidian_dist(AX, AY, BX, BY, normalization=1):
 def plot(data, labels, numFrames, sk):
     
     
-    print labels
+    #print labels
     t = np.zeros(data.shape[0]) + 2*np.std(data)
     coeff = data.shape[0] / numFrames
 
@@ -243,12 +238,11 @@ def plot(data, labels, numFrames, sk):
     number_of_column = 1 + nb_feat_per_joint*nb_joint + len(features)
     number_of_line = len([value for value in labels if value != 0])
     data_frame = [[0]*number_of_column for x in xrange(number_of_line)]
-    print number_of_line, number_of_column
+    #print number_of_line, number_of_column
     
     joints = sk.joints
     #data_mixed = np.zeros(np.transpose(a[0])[0].shape[0])
     for index, array in enumerate(a):
-        print a_name[index] 
 
         size = len(array)
         color = {'ElbowLeft':'r', 'ElbowRight':'k',
@@ -424,79 +418,51 @@ def plot(data, labels, numFrames, sk):
 
 ###########    
 
-def create_training_feature():
-    f = open('training_features_f128.csv', 'wb') 
+def train_model_on_gestures(wav_list):
 
-    wav_list = getAllWav('training', True)
-    #wav_list = getOneWav()
-    for wav in wav_list:
-        path = re.sub('\_audio.wav$', '', wav)
-        print '\n', '##############'
-        print path[-25:]
-        sample = VideoMat(path)
-        sk = Skelet(sample)
-        rate, data = get_data(wav)
-        data_frame = np.asarray(plot(data, sample.labels, sample.numFrames, sk))
-        data_frame2 = np.asarray(Head_inter(path, sample.labels).data_frame)
-        data_frame = np.hstack((data_frame, data_frame2))
-        
-        for infos in data_frame:
-            for index, info in enumerate(infos):
-                if(index+1 == len(infos)):
-                    f.write(info + '\n')
-                else:
-                    f.write(info + ',')
-    f.close()
- 
-####################     
-
-def train_model_gestures():
-    def create_data(data):
-
-        gestures = {'vattene':0, 'vieniqui':1, 'perfetto':2, 'furbo':3, 'cheduepalle':4,
+    gestures = {'vattene':0, 'vieniqui':1, 'perfetto':2, 'furbo':3, 'cheduepalle':4,
                     'chevuoi':5, 'daccordo':6, 'seipazzo':7, 'combinato':8, 'freganiente':9, 
                     'ok':10, 'cosatifarei':11, 'basta':12, 'prendere':13, 'noncenepiu':14,
                     'fame':15, 'tantotempo':16, 'buonissimo':17, 'messidaccordo':18, 'sonostufo':19}
 
-        size = data.shape[0]
-        d = data[0]
-        X = np.zeros((size, len(d)-1))
-        Y = np.zeros(size)
+    for wav in wav_list:
+        path = re.sub('\_audio.wav$', '', wav)
+        print '\n', '##############'
+        print path[-25:]
+        sample = VideoMat(path, True)
+        sk = Skelet(sample)
+        rate, data = get_data(wav)
+        data_frame = np.asarray(plot(data, sample.labels, sample.numFrames, sk))
+        #data_frame2 = np.asarray(Head_inter(path, sample.labels).data_frame)
+        #data_frame = np.hstack((data_frame, data_frame2))
         
-        print size, len(d)
 
-        for index, d in enumerate(data):
-            if d[0] not in gestures:
-                Y[index] = -1
-            else:
-                Y[index] = gestures[d[0]]
-            for index_field in range(1, len(d)):
-                X[index, index_field-1] = d[index_field]    
-        return X, Y
-
-
-    data = recfromtxt('training_features_f128.csv', delimiter=',') 
-    X, Y = create_data(data)
+    # 1 target / 19 * 6 joints infos / 8 Head/Hand distances / 5 Head box = 128 features
+    #Train model    
+    Y = data_frame[:, 0]
+    Y = np.asarray([gestures[i] for i in Y])
+    X = data_frame[:, 1:]
+    X = X.astype(np.float32, copy=False)
     X = X[:, :123]
     clf = RandomForestClassifier(n_estimators=300, criterion='entropy', min_samples_split=10, 
-            min_samples_leaf=1, n_jobs=2, verbose=2, random_state=1)
+            min_samples_leaf=1, verbose=2, random_state=1) #n_jobs=2
     clf = clf.fit(X, Y)
     pickle.dump(clf, open('gradient_boosting_model_gestures.pkl','wb'))
  
 #################### 
  
-def train_model_sound(): 
+def train_model_on_sound(wav_list): 
     gestures = {'vattene':0, 'vieniqui':1, 'perfetto':2, 'furbo':3, 'cheduepalle':4,
                 'chevuoi':5, 'daccordo':6, 'seipazzo':7, 'combinato':8, 'freganiente':9, 
                 'ok':10, 'cosatifarei':11, 'basta':12, 'prendere':13, 'noncenepiu':14,
                 'fame':15, 'tantotempo':16, 'buonissimo':17, 'messidaccordo':18, 'sonostufo':19}
     dataX = []
-    wav_list = getAllWav('training', True)
+    
     for wav in wav_list:
         path = re.sub('\_audio.wav$', '', wav)
         print '\n', '##############'
         print path[-25:]
-        sample = VideoMat(path)
+        sample = VideoMat(path, True)
         sk = Skelet(sample)
         rate, data = get_data(wav)
         labels = sample.labels
@@ -521,7 +487,7 @@ def train_model_sound():
                         else:
                             data_interval[:space*coeff] = data[(beg2-1)*coeff:(end2-10)*coeff]
                         ceps, mspec, spec = mf.mfcc(data_interval)
-                        print ceps.shape, mspec.shape, spec.shape
+                        #print ceps.shape, mspec.shape, spec.shape
                         data_tmp = np.zeros(features_nb)
                         data_tmp[0] = gestures[name]
                         data_tmp[1:2588] = ceps.reshape(2587)
@@ -539,11 +505,11 @@ def train_model_sound():
     clf = clf.fit(X, Y) 
     pickle.dump(clf, open('gradient_boosting_model_sound.pkl','wb'))
     
-    clf = RandomForestClassifier(n_estimators=300, criterion='entropy', min_samples_split=10, min_samples_leaf=1, n_jobs=2, verbose=2, random_state=1)
+    clf = RandomForestClassifier(n_estimators=300, criterion='entropy', min_samples_split=10, min_samples_leaf=1, verbose=2, random_state=1) #n_jobs=2
     clf = clf.fit(X, Y) 
     pickle.dump(clf, open('random_forest_model_sound.pkl','wb'))
     
-    clf = ExtraTreesClassifier(n_estimators=300, min_samples_split=10, min_samples_leaf=1, n_jobs=2, verbose=2, random_state=1)
+    clf = ExtraTreesClassifier(n_estimators=300, min_samples_split=10, min_samples_leaf=1, verbose=2, random_state=1) #n_jobs=2
     clf = clf.fit(X, Y) 
     pickle.dump(clf, open('extra_trees_model_sound.pkl','wb'))
        
@@ -553,7 +519,7 @@ def create_predicting_feature(path, wav, clf_gb, clf_rf, gradient_boosting_model
 
     print '\n', '##############'
     print path[-25:]
-    sample = VideoMat(path)
+    sample = VideoMat(path, False)
     sk = Skelet(sample)
     rate, data = get_data(wav)
     coeff = data.shape[0] / sample.numFrames
@@ -608,23 +574,20 @@ def create_predicting_feature(path, wav, clf_gb, clf_rf, gradient_boosting_model
     
     return class_proba, class_proba_gb, class_proba_rf
 
-def full_prediction():
+def full_prediction(wav_list):
 
-    
-
-    clf_gb = pickle.load(open('gradient_boosting_model_sound.pkl','rb'))
-    clf_rf = pickle.load(open('random_forest_model_sound.pkl','rb'))
-    gradient_boosting_model_gestures = pickle.load(open('gradient_boosting_model_gestures.pkl','rb'))
+    clf_gb_sound = pickle.load(open('gradient_boosting_model_sound.pkl','rb'))
+    clf_rf_sound = pickle.load(open('random_forest_model_sound.pkl','rb'))
+    clf_gb_gest = pickle.load(open('gradient_boosting_model_gestures.pkl','rb'))
 
     output = open('Submission.csv','wb', ) #Submission.csv
     output.write('Id,Sequence\n') 
-    wav_list = getAllWav('validation', True)
-    #wav_list = getOneWav()
+    
     for wav in wav_list:
         path = re.sub('\_audio.wav$', '', wav)
         output.write('%s,' %(path[-4:]))
         
-        class_proba, class_proba_gb, class_proba_rf = create_predicting_feature(path, wav, clf_gb, clf_rf, gradient_boosting_model_gestures)
+        class_proba, class_proba_gb, class_proba_rf = create_predicting_feature(path, wav, clf_gb_sound, clf_rf_sound, clf_gb_gest)
         
         print class_proba.shape, class_proba_gb.shape, class_proba_rf.shape
         #print class_proba, class_proba_gb, class_proba_rf
@@ -638,8 +601,7 @@ def full_prediction():
         class_proba = w[0] * class_proba + w[1] * class_proba_gb + w[2] * class_proba_rf
         #print class_proba
         
-        print 'class proba size:'
-        
+        #print 'class proba size:'
         
         threshold = 0.4
         ## Write prediction that are sure (greater than the threshold of 0.4)
@@ -662,27 +624,32 @@ def full_prediction():
     output.close()
         
 def main():
-    tic = time.clock()
-    create_training_feature()
-    toc = time.clock()
-    print '=> Features creation:', toc-tic #Features creation: 2159.95s = 36mn
+    root = '/home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition'
+
+    #Training part
+    wav_list = []
+    for directory in ['training1', 'training2', 'training3', 'training4']: #'validation1_lab', 'validation2_lab', 'validation3_lab'
+        wav_list += getAllWav(directory, True, root)
+    wav_list.sort() #Just in case
+
+    print '=> Features creation and training on gestures: 20mn'
+    train_model_on_gestures(wav_list)
     
-    tic = time.clock()
-    train_model_gestures()
-    toc = time.clock()
-    print '=> Training on gestures:', toc-tic #Training on gestures: 18.77s
+    print '=> Features creation and training on sound: 4h18'
+    train_model_on_sound(wav_list)
     
-    tic = time.clock()
-    train_model_sound()
-    toc = time.clock()
-    print '=> Features creation and training on sound:', toc-tic #Features creation and training on sound: 15484.51s = 258mn = 4h18
+    #Predicting part
+    wav_list = []
+    for directory in ['validation1_nolab', 'validation2_nolab', 'validation3_nolab']: #test1, test2, test3, test4, test5, test6
+        wav_list += getAllWav(directory, True, root)
+    wav_list.sort() #Just in case
     
-    tic = time.clock()
-    full_prediction()
-    toc = time.clock()
-    print '=> Full prediction:', toc-tic # Full prediction: 2481.75s = 41mn
+    #wav_list = getOneWav(root, 'training1', 'Sample00001') # Prediction on one sample
     
-    #create_predicting_feature()
+    print '=> Full prediction: 41mn'
+    full_prediction(wav_list)
+    
+    print 'See Submission.csv for prediction'
     
 if __name__ == "__main__":
     main()
