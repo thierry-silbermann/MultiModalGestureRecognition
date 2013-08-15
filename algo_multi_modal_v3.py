@@ -429,6 +429,8 @@ def train_model_on_gestures(wav_list):
                     'ok':10, 'cosatifarei':11, 'basta':12, 'prendere':13, 'noncenepiu':14,
                     'fame':15, 'tantotempo':16, 'buonissimo':17, 'messidaccordo':18, 'sonostufo':19}
 
+    dataX = []
+    i = 0
     for wav in wav_list:
         path = re.sub('\_audio.wav$', '', wav)
         print '\n', '##############'
@@ -440,15 +442,17 @@ def train_model_on_gestures(wav_list):
         #print 'data_frame !', data_frame.shape
         #data_frame2 = np.asarray(Head_inter(path, sample.labels).data_frame)
         #data_frame = np.hstack((data_frame, data_frame2))
-
+        dataX += copy.copy(data_frame)
+        
+        
     # 1 target / 19 * 6 joints infos / 8 Head/Hand distances / 5 Head box = 128 features
     #Train model: Don't use the Head box features, don't really improve the model  
+    data_frame = np.asarray(dataX)
     Y = data_frame[:, 0]
     Y = np.asarray([gestures[i] for i in Y])
     X = data_frame[:, 1:]
     X = X.astype(np.float32, copy=False)
     X = X[:, :122] 
-    #print 'gestures:', X.shape
     clf = RandomForestClassifier(n_estimators=300, criterion='entropy', min_samples_split=10, 
             min_samples_leaf=1, verbose=2, random_state=1) #n_jobs=2
     clf = clf.fit(X, Y)
@@ -536,8 +540,7 @@ def create_predicting_feature(path, wav, clf_gb, clf_rf, gradient_boosting_model
     #data_frame = np.hstack((data_frame, [str(end-beg) for name, (beg, end) in labels]))
     #data_frame = np.hstack((data_frame, data_frame2))
     X_test = np.asarray(data_frame)
-    #print 'X_test', X_test.shape
-    X_test = X_test[:, 1:123]  
+    X_test = X_test[:, 1:123]   # shape(x, 122)
     X_test = X_test.astype(np.float32, copy=False)
     class_proba = gradient_boosting_model_gestures.predict_proba(X_test)
     
