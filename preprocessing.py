@@ -5,6 +5,8 @@ from pandas import DataFrame
 import tarfile
 import zipfile
 import scipy.io
+import postprocessing
+import pandas as pd
 import os
 from joblib import Memory, Parallel, delayed
 memory = Memory('cache/')
@@ -218,5 +220,6 @@ def aggregated_skeletion(file_names=['training1', 'training2', 'training3',
 
 
 if __name__ == '__main__':
-
-    extract_skeletion_from_files()
+    from preprocessing import agg_movement_intervals
+    #extract_skeletion_from_files()
+    agg_movement_intervals('training1')
