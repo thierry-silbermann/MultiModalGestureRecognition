@@ -565,36 +565,66 @@ def create_predicting_feature(path, wav, clf_gb, clf_rf, gradient_boosting_model
     
     class_proba_gb, class_proba_rf = get_class_proba_sound(clf_gb, clf_rf, data, labels, sample.numFrames)
     
-    return class_proba, class_proba_gb, class_proba_rf
+    return class_proba, class_proba_gb, class_proba_rf, labels
 
-def prediction(wav_list):
+def blend_model(wav_list):
 
     clf_gb_sound = pickle.load(open('gradient_boosting_model_sound.pkl','rb'))
     clf_rf_sound = pickle.load(open('random_forest_model_sound.pkl','rb'))
     clf_gb_gest = pickle.load(open('gradient_boosting_model_gestures.pkl','rb'))
 
-    output = open('Submission.csv','wb', ) #Submission.csv
+    output = open('Submission_table.csv','wb', ) #Submission.csv
     output.write('Id,Sequence\n') 
     
     for wav in wav_list:
         path = re.sub('\_audio.wav$', '', wav)
-        output.write('%s,' %(path[-4:]))
-        
-        class_proba, class_proba_gb, class_proba_rf = create_predicting_feature(path, wav, clf_gb_sound, clf_rf_sound, clf_gb_gest)
-
-        
+        class_proba, class_proba_gb, class_proba_rf, labels = create_predicting_feature(path, wav, clf_gb_sound, clf_rf_sound, clf_gb_gest)
+#####
+        for i in range(class_proba.shape[0]):
+            name, (beg, end) = labels[i]
+            output.write('%s,%d,%s,%s,%s\n' %(path[-4:], (end+beg)/2)
+                                                      ','.join(  (map(str, class_proba[i]))), 
+                                                      ','.join(  (map(str, class_proba_gb[i]))),
+                                                      ','.join(  (map(str, class_proba_rf[i]))) ))
+###### 
         print class_proba.shape, class_proba_gb.shape, class_proba_rf.shape
         #print class_proba, class_proba_gb, class_proba_rf
         if(class_proba.shape != class_proba_gb.shape or class_proba.shape != class_proba_rf.shape):
             raise Exception("Error dimension between class proba")
 
-        #TODO: Do something with the three different models.
-        # [0.25, 0.375, 0.375]  => 0.408982748364
-        # [1./3, 1./3 ,1./3]    => 0.336109458656
-        w = [1./3, 1./3 ,1./3] 
-        class_proba = w[0] * class_proba + w[1] * class_proba_gb + w[2] * class_proba_rf
+    output.close()
 
-        threshold = 0.4
+def submission():
+    data = genfromtxt('Submission_table.csv', delimiter=';', skip_header=1)
+
+    print data.shape
+    print np.isnan(data).sum()
+    data = np.nan_to_num(data)
+    
+    ID = data[:, 0]
+    Frame = data[:, 1]
+    
+    uniq_ID = np.unique(ID)
+
+    Model1 = data[:, 2:22]
+    Model2 = data[:, 22:42]
+    Model3 = data[:, 42:62]
+    #Model4 = data[:, 62:82]
+    #Break = data[:, 82]
+    #Mouvement = data[:83]
+    
+    w = [1./3, 1./3, 1./3] #[0.25, 0.25, 0.25, 0.25] #[0.25, 0.25, 0.25, 0.25] # #
+    threshold = 0.4
+    
+    final_proba = w[0] * Model1 + w[1] * Model2 + w[2] * Model3 #+ w[3] * Model4
+    
+    output = open('Submission.csv','wb', ) #Submission.csv
+    output.write('Id,Sequence\n') 
+    for i in uniq_ID:
+        output.write('0%d,' %(i))
+        index = np.where(ID==i)[0]
+        class_proba = final_proba[index]
+    
         ## Write prediction that are sure (greater than the threshold of 0.4)
         actual_gesture = -1
         nb_of_detection = class_proba.shape[0]
@@ -639,8 +669,9 @@ def main():
                                                             # comment the previous three line to do prediction on one sample
     
     print '=> Full prediction: 41mn'
-    prediction(wav_list)
+    blend_model(wav_list)
     
+    submission()
     print 'See Submission.csv for prediction'
     
 if __name__ == "__main__":
