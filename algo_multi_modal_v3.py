@@ -23,6 +23,7 @@ from scipy.signal import argrelextrema
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import ExtraTreesClassifier
+from numpy import genfromtxt
 
 def smooth_plus(x,window_len=50,window='hanning'):
 
@@ -579,14 +580,12 @@ def blend_model(wav_list):
     for wav in wav_list:
         path = re.sub('\_audio.wav$', '', wav)
         class_proba, class_proba_gb, class_proba_rf, labels = create_predicting_feature(path, wav, clf_gb_sound, clf_rf_sound, clf_gb_gest)
-#####
         for i in range(class_proba.shape[0]):
             name, (beg, end) = labels[i]
             output.write('%s,%d,%s,%s,%s\n' %(path[-4:], (end+beg)/2)
                                                       ','.join(  (map(str, class_proba[i]))), 
                                                       ','.join(  (map(str, class_proba_gb[i]))),
                                                       ','.join(  (map(str, class_proba_rf[i]))) ))
-###### 
         print class_proba.shape, class_proba_gb.shape, class_proba_rf.shape
         #print class_proba, class_proba_gb, class_proba_rf
         if(class_proba.shape != class_proba_gb.shape or class_proba.shape != class_proba_rf.shape):
@@ -670,8 +669,8 @@ def main():
     
     print '=> Full prediction: 41mn'
     blend_model(wav_list)
-    
     submission()
+    
     print 'See Submission.csv for prediction'
     
 if __name__ == "__main__":
