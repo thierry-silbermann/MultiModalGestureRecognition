@@ -6,7 +6,7 @@ import os
 import random
 import re
 import pickle
-from algo import VideoMat
+from VideoMat import VideoMat
 
 class Skelet:
 

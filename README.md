@@ -1,28 +1,37 @@
-TODO
-----
-create json file with local path to avoid conflict when push
-
-
-folder structure
+Folder structure
 ----------------
 
-put the original dat in:
-data/raw_data/
+All the .py file should be in the same directory. You need to change the root path in algo_multi_model_v3.py in the main function.
+The data should be unzipped in the root, so to have the following path from the root to a .mat file: 'root/trainingX/SampleXXXXX/SampleXXXXX_data.mat
+The data is unzipped on all level but it is quite easy to deal with zip file if needed.
+
+I only supplied the source file. Everything can be generated from them. (Principally the models). If needed I can supply the models in a pickle format (around 67Mb)
+
+The prediction can be done on individual sample or all the sample.
+
+I deleted Sample0177 from the training file because the data looked really weird.
+
+The library dependency are normally: numpy, scipy, scikit-learn
+The code was tested on Ubuntu 13.04 with:
+Python 2.7.4
+Numpy 1.7.1
+Scipy 0.11.0
+Scikit-learn 0.13.1
+
+Any questions or problems? thierry.silbermann@gmail.com
 
 #########################
 
 Actual Model with Blending of 3 models
 ------------
-    You need : numpy, scipy, opencv, scikit-learn
-    
-    You need:
-    
+
+    You need these classes (nothing need to be change in these 4 classes):
     - VideoMat.py
     - Skelet.py
     - mfcc.py
     - mel.py
     
-    - algo_multi_modal_v3.py
+This is the main program: algo_multi_modal_v3.py (only changed should be made in the main() function)
 
     Launch algo_multi_modal_v3.py:
         It will do  #Features creation and training on gestures: 20mn
@@ -32,23 +41,3 @@ Actual Model with Blending of 3 models
     
 #########################
 
-Bad samples
--------
-
-Sample00011 15
-Sample00014 15
-Sample00071 8
-Sample00072 11
-Sample00173 12
-Sample00174 12
-Sample00175 13
-Sample00176 12
-Sample00177 15
-Sample00179 13
-Sample00181 14
-Sample00183 15
-Sample00187 14
-Sample00338 10
-Sample00339 14
-Sample00374 16
-Sample00391 14

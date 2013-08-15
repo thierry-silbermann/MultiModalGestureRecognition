@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+__author__ = "Thierry Silbermann"
+__credits__ = ["Thierry Silbermann", "Immanuel Bayer"]
+__email__ = "thierry.silbermann@gmail.com"
+
 import copy
 import math
 import os
@@ -46,7 +52,7 @@ def getAllWav(flter, isSorted, root_directory):
     project_directory = root_directory
     for r,d,f in os.walk(project_directory):
         for files in f:
-            if files.endswith(".wav") and flter in os.path.join(r,files):
+            if files.endswith(".wav") and '/'+flter+'/' in os.path.join(r,files):
                  wav_list.append(os.path.join(r,files))
     if isSorted:
         wav_list.sort()
@@ -87,7 +93,7 @@ def true_peak(arr, data):
 
 ############
 
-# Home made algorithm to find interval for action in sound file
+# Homemade algorithm to find interval for action in sound file
 def get_interval(data, numFrames):
     data = np.absolute(data)
     data = smooth_plus(data, 3000) #smooth(data, 300)
@@ -101,13 +107,11 @@ def get_interval(data, numFrames):
             count = 0
             while (math.fabs(data[i]) > std or count < 3000) and ((i+1) <= (len(data)-1)):
                 i += 1
-                #print i
                 if (math.fabs(data[i]) < std):
                     count += 1
                 else:
                     count = 0
                     end = i
-            #print beg, end, end-beg
             if(end - beg > 3000):
                 if end + 10000 < len(data):
                     end += 10000
@@ -196,8 +200,7 @@ def euclidian_dist(AX, AY, BX, BY, normalization=1):
    
 ##########     
 
-def plot(data, labels, numFrames, sk):
-    
+def create_features(data, labels, numFrames, sk):
     
     #print labels
     t = np.zeros(data.shape[0]) + 2*np.std(data)
@@ -432,18 +435,18 @@ def train_model_on_gestures(wav_list):
         sample = VideoMat(path, True)
         sk = Skelet(sample)
         rate, data = get_data(wav)
-        data_frame = np.asarray(plot(data, sample.labels, sample.numFrames, sk))
+        data_frame = np.asarray(create_features(data, sample.labels, sample.numFrames, sk))
         #data_frame2 = np.asarray(Head_inter(path, sample.labels).data_frame)
         #data_frame = np.hstack((data_frame, data_frame2))
         
 
     # 1 target / 19 * 6 joints infos / 8 Head/Hand distances / 5 Head box = 128 features
-    #Train model    
+    #Train model: Don't use the Head box features, don't really improve the model  
     Y = data_frame[:, 0]
     Y = np.asarray([gestures[i] for i in Y])
     X = data_frame[:, 1:]
     X = X.astype(np.float32, copy=False)
-    X = X[:, :123]
+    X = X[:, :122]
     clf = RandomForestClassifier(n_estimators=300, criterion='entropy', min_samples_split=10, 
             min_samples_leaf=1, verbose=2, random_state=1) #n_jobs=2
     clf = clf.fit(X, Y)
@@ -523,26 +526,16 @@ def create_predicting_feature(path, wav, clf_gb, clf_rf, gradient_boosting_model
     sk = Skelet(sample)
     rate, data = get_data(wav)
     coeff = data.shape[0] / sample.numFrames
-    if False: #Set to True to use interval from solution file / Set to False to get actual algorithm
-        labels = []
-        file_labels = open('labels/'+path[-11:]+'.txt', 'rb')
-        for line in file_labels:
-            spl = line[:-1].split(';')
-            name, beg, end = spl[0], int(spl[1]), int(spl[2])
-            labels.append([name, (beg, end)])
-        file_labels.close()
-    else:
-        labels = get_interval(data, sample.numFrames)
-        labels = interval_analysis(labels, sk) 
-        labels = [['', (beg, end)] for name, (beg, end) in labels if end-beg>10]
-    data_frame = np.asarray(plot(data, labels, sample.numFrames, sk))
-    data_frame2 = np.asarray(Head_inter(path, labels).data_frame)
-    #print 'data frame size', len(data_frame), len(data_frame2), len([str(end-beg) for name, (beg, end) in labels])
+    labels = get_interval(data, sample.numFrames)
+    labels = interval_analysis(labels, sk) 
+    labels = [['', (beg, end)] for name, (beg, end) in labels if end-beg>10]
+    data_frame = np.asarray(create_features(data, labels, sample.numFrames, sk))
+    #data_frame2 = np.asarray(Head_inter(path, labels).data_frame)
     #data_frame = np.hstack((data_frame, [str(end-beg) for name, (beg, end) in labels]))
-    data_frame = np.hstack((data_frame, data_frame2))
+    #data_frame = np.hstack((data_frame, data_frame2))
     X_test = np.asarray(data_frame)
     print 'X_test', X_test.shape
-    X_test = X_test[:, 1:124] 
+    X_test = X_test[:, 1:123] 
     X_test = X_test.astype(np.float32, copy=False)
     class_proba = gradient_boosting_model_gestures.predict_proba(X_test)
     
@@ -574,7 +567,7 @@ def create_predicting_feature(path, wav, clf_gb, clf_rf, gradient_boosting_model
     
     return class_proba, class_proba_gb, class_proba_rf
 
-def full_prediction(wav_list):
+def prediction(wav_list):
 
     clf_gb_sound = pickle.load(open('gradient_boosting_model_sound.pkl','rb'))
     clf_rf_sound = pickle.load(open('random_forest_model_sound.pkl','rb'))
@@ -588,6 +581,7 @@ def full_prediction(wav_list):
         output.write('%s,' %(path[-4:]))
         
         class_proba, class_proba_gb, class_proba_rf = create_predicting_feature(path, wav, clf_gb_sound, clf_rf_sound, clf_gb_gest)
+
         
         print class_proba.shape, class_proba_gb.shape, class_proba_rf.shape
         #print class_proba, class_proba_gb, class_proba_rf
@@ -597,12 +591,9 @@ def full_prediction(wav_list):
         #TODO: Do something with the three different models.
         # [0.25, 0.375, 0.375]  => 0.408982748364
         # [1./3, 1./3 ,1./3]    => 0.336109458656
-        w = [1./3, 1./3 ,1./3] #w = [1./3, 1./3 ,1./3] #weight for each model
+        w = [1./3, 1./3 ,1./3] 
         class_proba = w[0] * class_proba + w[1] * class_proba_gb + w[2] * class_proba_rf
-        #print class_proba
-        
-        #print 'class proba size:'
-        
+
         threshold = 0.4
         ## Write prediction that are sure (greater than the threshold of 0.4)
         actual_gesture = -1
@@ -622,7 +613,7 @@ def full_prediction(wav_list):
                         output.write('%d '%(index_max_value))
         output.write('\n')
     output.close()
-        
+
 def main():
     root = '/home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition'
 
@@ -640,14 +631,15 @@ def main():
     
     #Predicting part
     wav_list = []
-    for directory in ['validation1_nolab', 'validation2_nolab', 'validation3_nolab']: #test1, test2, test3, test4, test5, test6
+    for directory in ['validation1', 'validation2', 'validation3']: #test1, test2, test3, test4, test5, test6
         wav_list += getAllWav(directory, True, root)
     wav_list.sort() #Just in case
     
-    #wav_list = getOneWav(root, 'training1', 'Sample00001') # Prediction on one sample
+    #wav_list = getOneWav(root, 'training1', 'Sample00001') # Uncomment this line and 
+                                                            # comment the previous three line to do prediction on one sample
     
     print '=> Full prediction: 41mn'
-    full_prediction(wav_list)
+    prediction(wav_list)
     
     print 'See Submission.csv for prediction'
     

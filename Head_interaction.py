@@ -7,7 +7,7 @@ import re
 import sys
 import matplotlib.pyplot as plt
 
-from algo import VideoMat
+from VideoMat import VideoMat
 from Skelet import Skelet
 
 class Head_inter:
@@ -36,7 +36,7 @@ class Head_inter:
         path = re.sub('\_audio.wav$', '', wav) 
         print path
         
-        sample = VideoMat(path)
+        sample = VideoMat(path, False)
         sk = Skelet(sample)
         #labels = sample.labels
         
