@@ -572,13 +572,13 @@ def create_predicting_feature(path, wav, clf_gb, clf_rf, gradient_boosting_model
     
     return class_proba, class_proba_gb, class_proba_rf, labels
 
-def blend_model(wav_list):
+def blend_model(wav_list, submission_table_filename):
 
     clf_gb_sound = pickle.load(open('gradient_boosting_model_sound.pkl','rb'))
     clf_rf_sound = pickle.load(open('random_forest_model_sound.pkl','rb'))
     clf_gb_gest = pickle.load(open('gradient_boosting_model_gestures.pkl','rb'))
 
-    output = open('Submission_table.csv','wb', ) #Submission.csv
+    output = open(submission_table_filename,'wb', ) #Submission.csv
     output.write('Id,Sequence\n') 
     
     for wav in wav_list:
@@ -597,8 +597,8 @@ def blend_model(wav_list):
 
     output.close()
 
-def submission():
-    data = genfromtxt('Submission_table.csv', delimiter=';', skip_header=1)
+def submission(submission_table_filename):
+    data = genfromtxt(submission_table_filename, delimiter=';', skip_header=1)
 
     print data.shape
     print np.isnan(data).sum()
@@ -672,8 +672,11 @@ def main():
                                                             # comment the previous three line to do prediction on one sample
     
     print '=> Full prediction: 41mn'
-    blend_model(wav_list)
-    submission()
+    submission_table_filename = 'Submission_table.csv'
+    blend_model(wav_list, submission_table_filename)
+    
+    
+    submission(submission_table_filename)
     
     print 'See Submission.csv for prediction'
     
