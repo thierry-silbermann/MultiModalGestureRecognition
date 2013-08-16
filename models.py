@@ -56,7 +56,9 @@ def leaderboard_model(out_file='leaderboard.csv',window_shift=1,
 
 @memory.cache
 def movement_interval(window_shift=1, retrain=False,
-        train_on=['training1','training2', 'training3', 'training4']):
+        train_on=['training1','training2', 'training3', 'training4'],
+        predict_on=['training1','training2', 'training3',
+        'training4', 'validation1_lab', 'validation2_lab', 'validation3_lab']):
 
     filename = 'cache/joblib/rf_leaderboard.joblib.pkl'
 
@@ -73,8 +75,7 @@ def movement_interval(window_shift=1, retrain=False,
     else:
         clf = joblib.load(filename)
 
-    X_win = aggregated_skeletion_win(['training1','training2', 'training3',
-        'training4', 'validation1_lab', 'validation2_lab', 'validation3_lab'],
+    X_win = aggregated_skeletion_win(predict_on,
         agg_functions=['median', 'var', 'min', 'max'], 
         window_shift=window_shift)
 
@@ -256,8 +257,17 @@ if __name__ == '__main__':
     #eval_gesture_model(window_shift=1)
     #eval_gesture_model(window_shift=5)
     from models import movement_interval, agg_movement_intervals, collect_movement_intervalls
-    movement_interval(window_shift=1, retrain=False,
-        train_on=['training1','training2', 'training3', 'training4'])
+    movement_interval(window_shift=1, retrain=True,
+        train_on=['training1','training3', 'training4'],
+        predict_on=['training1','training2', 'training3',
+        'training4', 'validation1_lab', 'validation2_lab', 'validation3_lab'])
+
+    movement_interval(window_shift=1, retrain=True,
+        train_on=['training1','training3', 'training4', 'validation1_lab',
+            'validation3_lab'],
+        predict_on=['training1','training2', 'training3',
+        'training4', 'validation1_lab', 'validation2_lab', 'validation3_lab'])
+    #movement_interval(window_shift=1, retrain=False)
     #movement_interval()
     #agg_movement_intervals('training1')
     #collect_movement_intervalls(has_labels=True)
