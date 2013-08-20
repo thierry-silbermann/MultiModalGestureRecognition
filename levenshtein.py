@@ -50,5 +50,5 @@ def compute_score(filename1, filename2):
 
 test()
 #print compute_score('training_prediction.csv', 'Submission_training.csv')
-sum_, total, score = compute_score('leaderboard2.csv', 'data/raw_data/validation_truth.csv') #the second file need to be the truth value file for gestures
+sum_, total, score = compute_score('Submission.csv', 'validation_submission.csv') #the second file need to be the truth value file for gestures
 print score
