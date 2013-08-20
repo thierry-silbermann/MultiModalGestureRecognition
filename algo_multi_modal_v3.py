@@ -585,11 +585,11 @@ def blend_model(wav_list, submission_table_filename):
         path = re.sub('\_audio.wav$', '', wav)
         class_proba, class_proba_gb, class_proba_rf, labels = create_predicting_feature(path, wav, clf_gb_sound, clf_rf_sound, clf_gb_gest)
         for i in range(class_proba.shape[0]):
-            name, (beg, end) = labels[i]
-            output.write('%s,%d,%s,%s,%s\n' %(path[-4:], (end+beg)/2, 
-                                                      ','.join(  (map(str, class_proba[i]))), 
-                                                      ','.join(  (map(str, class_proba_gb[i]))),
-                                                      ','.join(  (map(str, class_proba_rf[i]))) ))
+            name, (beg, end) = labels[i] 
+            output.write('%s,%s,%d,%s,%s,%s\n' %(path[-11:], path[-4:], (end+beg)/2, 
+                                                      ','.join(  (map(str, class_proba[i]))  ), 
+                                                      ','.join(  (map(str, class_proba_gb[i]))  ),
+                                                      ','.join(  (map(str, class_proba_rf[i]))  ) ) ) 
         print class_proba.shape, class_proba_gb.shape, class_proba_rf.shape
         #print class_proba, class_proba_gb, class_proba_rf
         if(class_proba.shape != class_proba_gb.shape or class_proba.shape != class_proba_rf.shape):
@@ -598,28 +598,34 @@ def blend_model(wav_list, submission_table_filename):
     output.close()
 
 def submission(submission_table_filename):
-    data = genfromtxt(submission_table_filename, delimiter=';', skip_header=1)
+    data = genfromtxt(submission_table_filename, delimiter=',', skip_header=1)
 
-    print data.shape
-    print np.isnan(data).sum()
+    #print data.shape
+    #print np.isnan(data).sum()
     data = np.nan_to_num(data)
     
-    ID = data[:, 0]
-    Frame = data[:, 1]
+    ID = data[:, 1]
+    Frame = data[:, 2]
     
     uniq_ID = np.unique(ID)
 
-    Model1 = data[:, 2:22]
-    Model2 = data[:, 22:42]
-    Model3 = data[:, 42:62]
-    #Model4 = data[:, 62:82]
-    #Break = data[:, 82]
-    #Mouvement = data[:83]
+    Model1 = data[:, 3:23]
+    Model2 = data[:, 23:43]
+    Model3 = data[:, 43:63]
     
-    w = [1./3, 1./3, 1./3] #[0.25, 0.25, 0.25, 0.25] #[0.25, 0.25, 0.25, 0.25] # #
-    threshold = 0.4
-    
-    final_proba = w[0] * Model1 + w[1] * Model2 + w[2] * Model3 #+ w[3] * Model4
+    if data.shape[1] == 83:
+        print 'Four models blending'
+        Model4 = data[:, 63:83]
+        w = [0.1, 0.2, 0.2, 0.5] 
+        threshold = 0.3
+        final_proba = w[0] * Model1 + w[1] * Model2 + w[2] * Model3 + w[3] * Model4
+    else:
+        print 'Three models blending'
+        w = [0.4, 0.3, 0.3] #[1./3, 1./3, 1./3] 
+        threshold = 0.4
+        final_proba = w[0] * Model1 + w[1] * Model2 + w[2] * Model3 
+        print 'Threshold:', threshold
+        print 'Weight:', w
     
     output = open('Submission.csv','wb', ) #Submission.csv
     output.write('Id,Sequence\n') 
@@ -649,7 +655,7 @@ def submission(submission_table_filename):
 
 def main():
     root = '/home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition'
-
+    '''
     #Training part
     wav_list = []
     for directory in ['training1', 'training2', 'training3', 'training4']: #'validation1_lab', 'validation2_lab', 'validation3_lab'
@@ -670,12 +676,12 @@ def main():
     
     #wav_list = getOneWav(root, 'training1', 'Sample00001') # Uncomment this line and 
                                                             # comment the previous three line to do prediction on one sample
-    
+   
     print '=> Full prediction: 41mn'
     submission_table_filename = 'Submission_table.csv'
     blend_model(wav_list, submission_table_filename)
-    
-    
+    '''
+    submission_table_filename = 'final_Submission_table.csv'
     submission(submission_table_filename)
     
     print 'See Submission.csv for prediction'

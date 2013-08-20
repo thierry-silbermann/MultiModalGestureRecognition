@@ -40,7 +40,7 @@ This is the main program: algo_multi_modal_v3.py (only changed should be made in
                     #Features creation and training on sound: 4h18
                     #Full prediction: 41mn
     Finish! You can now submit the newly created file 'Submission.csv'
-    This submission is not our best model. It will normally give a score of 0.33
+    This submission is not our best model. It will normally give a score of 0.35
  
 Any questions or problems? thierry.silbermann@gmail.com   
 
@@ -49,6 +49,9 @@ Any questions or problems? thierry.silbermann@gmail.com
 in order to run the model you need to:
 =====================================
 
+- postprocessing.py
+- preprocessing.py
+- models.py
 
 Folder structure and manual data preparation
 ---------------------------------------------
@@ -76,5 +79,6 @@ Any questions or problems? immanuel.bayer@uni-konstanz.de
 
 Our current best score: '0.2596' is a blending from the result of the two different methods.
 The code is ready but we still testing it to be sure that it can be deployed easily by launching: 'python run_models.py' inside the root folder
+You can try launching it but I can't say anything on Immanuel's part.
 
 
