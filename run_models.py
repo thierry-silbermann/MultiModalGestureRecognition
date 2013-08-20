@@ -2,6 +2,7 @@ from models import movement_interval
 from pandas import DataFrame
 import pandas as pd
 import numpy as np
+from postprocessing import pad_smooth
 
 
 def train_audio_models(train_on, predict_on):
@@ -11,40 +12,14 @@ def train_audio_models(train_on, predict_on):
 def train_movement_model_and_merge_on_audio_interval(train_on, predict_on,
         path_to_audio_intervals, path_to_movement_model_with_audio_interval):
 
-    def pad(sample):
-        nr_frames = sample.frame.max() + 40
-        out = DataFrame({'frame': np.arange(nr_frames)})
-        out['sample_id'] = sample.sample_id.unique()[0]
 
-        out = pd.merge(out, sample, how='outer', on=['sample_id', 'frame'])
-        out.fillna(method='ffill', inplace=True, limit=2)
-        out.fillna(method='bfill', inplace=True)
-        out.fillna(method='ffill', inplace=True)
+    df_out = movement_interval(train_on=train_on, predict_on=predict_on)
+    df_out = df_out.groupby('sample_id').apply(pad_smooth, window_len=11)
 
-        n_to_fill = sample.frame.min()
-        #if n_to_fill * 2 > len(sample):
-            #return sample
-        #new_df = sample.head(n_to_fill * 2).copy()
-        #new_df.ix[:, :] = np.nan
-        #new_df.sample_id = sample.sample_id.unique()[0]
-        #new_df.frame = np.hstack([np.arange(0, n_to_fill),
-            #np.arange(sample.shape[0], sample.shape[0] + n_to_fill)])
-        #sample = pd.concat([sample, new_df], axis=0)
-        #sample.sort('frame', inplace=True)
-        ## account for 4 frame shift
-        #sample.fillna(method='ffill', inplace=True, limit=2)
-        #sample.fillna(method='bfill', inplace=True)
-        sample.fillna(method='ffill', inplace=True)
-        return out
-
-    df_out = movement_interval(window_shift=4, retrain=True,
-            train_on=train_on, predict_on=predict_on)
     middle = pd.read_csv(path_to_audio_intervals, skiprows=1, header=False)
     middle = middle.ix[:, [0, 2]]
-    #middle = middle[[0, 2]]
     middle.columns = ['sample_id', 'frame']
     print middle.shape
-    df_out = df_out.groupby('sample_id').apply(pad)
     #print df_out.shape
     #print df_out.head()
     print middle.shape
@@ -70,8 +45,9 @@ def create_prediction_file():
 
 if __name__ == '__main__':
 
-    path_to_audio_intervals = 'Submission_table_v3.csv'
-    path_to_movement_model_with_audio_interval = 'leaderboard_on_audio.csv'
+    path_to_audio_intervals = 'Submission_table_t1234_v123.csv'
+    path_to_movement_model_with_audio_interval =\
+            'movement_probs_added_' + path_to_audio_intervals
     #train_on = ['training1', 'training2', 'training3', 'training4', 
     #        'validation1_lab', 'validation2_lab', 'validation3_lab']
     train_on = ['training1', 'training2', 'training3', 'training4']
