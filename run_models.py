@@ -55,18 +55,15 @@ def merge_models(path_to_audio_intervals, path_to_movement_model_with_audio_inte
 if __name__ == '__main__':
 
 
-    root = 'data/raw' #/home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition/
+    root = 'data/raw_data/' #/home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition/
     path_to_audio_intervals = 'Submission_table.csv'
-    path_to_movement_model_with_audio_interval = 'middle_proba_added.csv'
+    path_to_movement_model_with_audio_interval = 'movement_probs_added_' + path_to_audio_intervals
 
     #leaderboard model settings
     train_on = ['training1', 'training2', 'training3', 'training4']
     predict_on = ['validation1_lab', 'validation2_lab', 'validation3_lab']
-    path_to_audio_intervals = 'Submission_table_t1234_v123.csv'
     
     train_audio_models(train_on, predict_on, path_to_audio_intervals, root)
-    path_to_movement_model_with_audio_interval =\
-            'movement_probs_added_' + path_to_audio_intervals
 
     train_movement_model_and_merge_on_audio_interval(train_on, predict_on,
             path_to_audio_intervals, path_to_movement_model_with_audio_interval)
@@ -79,11 +76,11 @@ if __name__ == '__main__':
     train_audio_models(train_on, predict_on, path_to_audio_intervals, root)
     path_to_movement_model_with_audio_interval =\
             'movement_probs_added_' + path_to_audio_intervals
-    '''
-
+    
     train_movement_model_and_merge_on_audio_interval(train_on, predict_on,
             path_to_audio_intervals, path_to_movement_model_with_audio_interval)
-            
+    '''     
+    
     merge_models(path_to_audio_intervals, path_to_movement_model_with_audio_interval)
     
     submission('final_'+path_to_audio_intervals)
