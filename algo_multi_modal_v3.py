@@ -654,7 +654,7 @@ def submission(submission_table_filename):
     output.close()
 
 def main():
-    root = '/home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition'
+    root = '/home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition/data/raw'
     '''
     #Training part
     wav_list = []

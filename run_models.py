@@ -55,7 +55,7 @@ def merge_models(path_to_audio_intervals, path_to_movement_model_with_audio_inte
 if __name__ == '__main__':
 
 
-    root = '/home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition'
+    root = '/home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition/data/raw'
     path_to_audio_intervals = 'Submission_table.csv'
     path_to_movement_model_with_audio_interval = 'middle_proba_added.csv'
 
