@@ -1,6 +1,8 @@
 from models import movement_interval
+from pandas import DataFrame
 import pandas as pd
 import numpy as np
+<<<<<<< HEAD
 import os
 from algo_multi_modal_v3 import *
 
@@ -32,31 +34,27 @@ def train_audio_models(train_on, predict_on, submission_table_filename, root):
     print '=> Full prediction: 41mn'
     blend_model(wav_list, submission_table_filename)
 
+from postprocessing import pad_smooth
+
+
+def train_audio_models(train_on, predict_on):
+    pass
+
 
 def train_movement_model_and_merge_on_audio_interval(train_on, predict_on,
         path_to_audio_intervals, path_to_movement_model_with_audio_interval):
 
-    def pad(sample):
-        n_to_fill = sample.frame.min()
-        if n_to_fill * 2 > len(sample):
-            return sample
-        new_df = sample.head(n_to_fill * 2).copy()
-        new_df.ix[:, :] = np.nan
-        new_df.sample_id = sample.sample_id.unique()[0]
-        new_df.frame = np.hstack([np.arange(0, n_to_fill),
-            np.arange(sample.shape[0], sample.shape[0] + n_to_fill)])
-        sample = pd.concat([sample, new_df], axis=0)
-        sample.sort('frame', inplace=True)
-        sample.fillna(method='bfill', inplace=True)
-        sample.fillna(method='ffill', inplace=True)
-        return sample
 
-    df_out = movement_interval(window_shift=1, retrain=True,
-            train_on=train_on)
-    df_out = df_out.groupby('sample_id').apply(pad)
-    middle = pd.read_csv(path_to_audio_intervals, names=['sample_id', 'frame'])
+    df_out = movement_interval(train_on=train_on, predict_on=predict_on)
+    df_out = df_out.groupby('sample_id').apply(pad_smooth, window_len=11)
+
+    middle = pd.read_csv(path_to_audio_intervals, header=None, skiprows=1)
+    middle = middle.ix[:, [0, 2]]
+    middle.columns = ['sample_id', 'frame']
     middle_probs = pd.merge(middle, df_out, how='left', on=['sample_id', 'frame'])
-    middle_probs.to_csv(path_to_movement_model_with_audio_interval)
+    middle_probs = middle_probs.drop(['sample_id', 'frame', 0, 'movement'], axis=1)
+
+    middle_probs.to_csv(path_to_movement_model_with_audio_interval, index=False)
 
 def merge_models(path_to_audio_intervals, path_to_movement_model_with_audio_interval):
     os.system("paste -d ',' " + path_to_audio_intervals + " " + path_to_movement_model_with_audio_interval + " > final_" + path_to_audio_intervals)
@@ -64,14 +62,24 @@ def merge_models(path_to_audio_intervals, path_to_movement_model_with_audio_inte
 
 if __name__ == '__main__':
 
-    root = '/home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition'
-    path_to_audio_intervals = 'Submission_table.csv'
-    path_to_movement_model_with_audio_interval = 'middle_proba_added.csv'
-    train_on = ['training1', 'training2', 'training3', 'training4', 
-            'validation1_lab', 'validation2_lab', 'validation3_lab']
-    predict_on = ['test1', 'test2', 'test3', 'test4', 'test5', 'test6']
 
-    train_audio_models(train_on, predict_on, path_to_audio_intervals, root)
+    #leaderboard model settings
+    predict_on = ['validation1_lab', 'validation2_lab', 'validation3_lab']
+    train_on = ['training1', 'training2', 'training3', 'training4']
+    path_to_audio_intervals = 'Submission_table_t1234_v123.csv'
+    path_to_movement_model_with_audio_interval =\
+            'movement_probs_added_' + path_to_audio_intervals
+
+    train_movement_model_and_merge_on_audio_interval(train_on, predict_on,
+            path_to_audio_intervals, path_to_movement_model_with_audio_interval)
+
+    # parameter estimation settings
+    predict_on = ['training2', 'validation2_lab']
+    train_on = ['training1', 'training3', 'training4', 'validation1_lab', 'validation3_lab']
+    path_to_audio_intervals = 'Submission_table_t134v13_t2v2.csv'
+    path_to_movement_model_with_audio_interval =\
+            'movement_probs_added_' + path_to_audio_intervals
+
 
     train_movement_model_and_merge_on_audio_interval(train_on, predict_on,
             path_to_audio_intervals, path_to_movement_model_with_audio_interval)
@@ -80,3 +88,10 @@ if __name__ == '__main__':
     
     submission('final_'+path_to_audio_intervals)
 
+    # test set model
+    #train_on = ['training1', 'training2', 'training3', 'training4', 
+    #        'validation1_lab', 'validation2_lab', 'validation3_lab']
+    #predict_on = ['test1', 'test2', 'test3', 'test4', 'test5', 'test6']
+
+
+    #train_audio_models(train_on, predict_on, path_to_audio_intervals)

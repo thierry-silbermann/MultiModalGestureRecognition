@@ -55,30 +55,31 @@ def leaderboard_model(out_file='leaderboard.csv',window_shift=1,
 
 
 @memory.cache
-def movement_interval(window_shift=1, retrain=False,
-        train_on=['training1','training2', 'training3', 'training4']):
+def movement_interval(train_on=['training1','training2', 'training3', 'training4'],
+        predict_on=['validation1_lab', 'validation2_lab', 'validation3_lab']):
 
-    filename = 'cache/joblib/rf_leaderboard.joblib.pkl'
+    window_shift = 5
+    window_length = 40
 
-    if retrain:
-        X, y = aggregated_skeletion(file_names=train_on,
-                agg_functions=['median', 'var', 'min', 'max'])
-        X = X.fillna(0)
-        y = np.array([gesture_to_id[gest] for gest in y])
-
-        clf = ExtraTreesClassifier(n_estimators=500, random_state=0,
-            n_jobs=-1)
-        clf.fit(X, y)
-        _ = joblib.dump(clf, filename, compress=9)
-    else:
-        clf = joblib.load(filename)
-
-    X_win = aggregated_skeletion_win(['training1','training2', 'training3',
-        'training4', 'validation1_lab', 'validation2_lab', 'validation3_lab'],
+    print 'aggregated_skeletion_win'
+    X_win = aggregated_skeletion_win(predict_on,
         agg_functions=['median', 'var', 'min', 'max'], 
-        window_shift=window_shift)
-
+        window_shift=window_shift, window_length=window_length)
     X_win= X_win.fillna(0)
+
+    print 'train rf model'
+    X, y = aggregated_skeletion(file_names=train_on,
+            agg_functions=['median', 'var', 'min', 'max'])
+    X = X.fillna(0)
+    y = np.array([gesture_to_id[gest] for gest in y])
+
+    clf = ExtraTreesClassifier(n_estimators=500, random_state=0,
+        n_jobs=-1)
+    clf.fit(X, y)
+    del X
+    del y
+
+    print 'rf predict'
     y_pred = clf.predict_proba(X_win)
 
     df_out = pd.concat([DataFrame.from_records(X_win.index.values.tolist(),
@@ -256,8 +257,13 @@ if __name__ == '__main__':
     #eval_gesture_model(window_shift=1)
     #eval_gesture_model(window_shift=5)
     from models import movement_interval, agg_movement_intervals, collect_movement_intervalls
-    movement_interval(window_shift=1, retrain=False,
-        train_on=['training1','training2', 'training3', 'training4'])
+    movement_interval(train_on=['training1','training2','training3', 'training4'],
+        predict_on=['validation1_lab', 'validation2_lab', 'validation3_lab'])
+
+    movement_interval(train_on=['training1','training3', 'training4', 'validation1_lab',
+            'validation3_lab'],
+        predict_on=['training2', 'validation2_lab'])
+    #movement_interval(window_shift=1, retrain=False)
     #movement_interval()
     #agg_movement_intervals('training1')
     #collect_movement_intervalls(has_labels=True)
