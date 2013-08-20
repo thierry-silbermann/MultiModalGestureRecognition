@@ -1,15 +1,16 @@
 from models import movement_interval
 import pandas as pd
 import numpy as np
+import os
 from algo_multi_modal_v3 import *
 
 
-def train_audio_models(train_on, predict_on, submission_table_filename):
-    root = '/home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition'
+def train_audio_models(train_on, predict_on, submission_table_filename, root):
+    
 
     #Training part
     wav_list = []
-    for directory in ['training1', 'training2', 'training3', 'training4']: #'validation1_lab', 'validation2_lab', 'validation3_lab'
+    for directory in train_on: 
         wav_list += getAllWav(directory, True, root)
     wav_list.sort() #Just in case
 
@@ -21,7 +22,7 @@ def train_audio_models(train_on, predict_on, submission_table_filename):
     
     #Predicting part
     wav_list = []
-    for directory in ['validation1', 'validation2', 'validation3']: #test1, test2, test3, test4, test5, test6
+    for directory in predict_on: 
         wav_list += getAllWav(directory, True, root)
     wav_list.sort() #Just in case
     
@@ -57,33 +58,25 @@ def train_movement_model_and_merge_on_audio_interval(train_on, predict_on,
     middle_probs = pd.merge(middle, df_out, how='left', on=['sample_id', 'frame'])
     middle_probs.to_csv(path_to_movement_model_with_audio_interval)
 
-
-def extract_audio_intervals_from_movement_model():
-    pass
-
-
-def merge_models():
-    pass
-
-
-def create_prediction_file():
-    pass
+def merge_models(path_to_audio_intervals, path_to_movement_model_with_audio_interval):
+    os.system("paste -d ',' " + path_to_audio_intervals + " " + path_to_movement_model_with_audio_interval + " > final_" + path_to_audio_intervals)
 
 
 if __name__ == '__main__':
 
+    root = '/home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition'
     path_to_audio_intervals = 'Submission_table.csv'
     path_to_movement_model_with_audio_interval = 'middle_proba_added.csv'
     train_on = ['training1', 'training2', 'training3', 'training4', 
             'validation1_lab', 'validation2_lab', 'validation3_lab']
     predict_on = ['test1', 'test2', 'test3', 'test4', 'test5', 'test6']
 
-    train_audio_models(train_on, predict_on, path_to_audio_intervals)
+    train_audio_models(train_on, predict_on, path_to_audio_intervals, root)
 
     train_movement_model_and_merge_on_audio_interval(train_on, predict_on,
             path_to_audio_intervals, path_to_movement_model_with_audio_interval)
             
-    merge_models() #TODO
+    merge_models(path_to_audio_intervals, path_to_movement_model_with_audio_interval)
     
-    submission(path_to_audio_intervals)
+    submission('final_'+path_to_audio_intervals)
 
