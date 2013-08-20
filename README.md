@@ -59,7 +59,8 @@ Folder structure and manual data preparation
 1. All the .py file should be in the same directory.
 2. create folder 'root/cache'
 3. in addition to the extracted data files, all the files (training, validation_lab, test)
-    have also to be in 'root/data/raw_data' in there orignal format '.gz'
+    have also to be in 'root/data/raw_data' in there orignal format '.tar.gz' (this means the
+    test files need to be extracted and compressed as .tar.gz again)
 
 DEPENDENCIES:
 ------------
