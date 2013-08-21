@@ -48,7 +48,9 @@ def compute_score(filename1, filename2):
     
     return sum_, total, float(sum_)/total
 
-test()
-#print compute_score('training_prediction.csv', 'Submission_training.csv')
-sum_, total, score = compute_score('Submission.csv', 'validation_submission.csv') #the second file need to be the truth value file for gestures
-print score
+
+if __name__ == '__main__':
+    test()
+    #print compute_score('training_prediction.csv', 'Submission_training.csv')
+    sum_, total, score = compute_score('Submission.csv', 'validation_submission.csv') #the second file need to be the truth value file for gestures
+    print score
