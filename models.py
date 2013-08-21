@@ -263,9 +263,11 @@ if __name__ == '__main__':
     movement_interval(train_on=['training1','training3', 'training4', 'validation1_lab',
             'validation3_lab'],
         predict_on=['training2', 'validation2_lab'])
-    #movement_interval(window_shift=1, retrain=False)
-    #movement_interval()
-    #agg_movement_intervals('training1')
-    #collect_movement_intervalls(has_labels=True)
-    #collect_movement_intervalls(file_names=['validation1_lab', 'validation2_lab',
-    #    'validation3_lab'], has_labels=True)
+
+    movement_interval(train_on=['training2','training3', 'training4', 'validation2_lab',
+            'validation3_lab'],
+        predict_on=['training1', 'validation1_lab'])
+
+    movement_interval(train_on=['training1','training2','training3', 'training4',
+            'validation1_lab', 'validation2_lab', 'validation3_lab'],
+        predict_on=['test1', 'test2', 'test3', 'test4', 'test5', 'test6'])

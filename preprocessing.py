@@ -17,7 +17,10 @@ def skeletion_from_mat(mat):
     df = DataFrame()
     Frames = mat['Video']['Frames'][0][0][0]
 
-    has_labels = mat['Video']['Labels'][0][0].shape[1] > 0
+    if 'Labels' in  mat['Video']:
+        has_labels = mat['Video']['Labels'][0][0].shape[1] > 0
+    else: 
+        has_labels = False
 
     if has_labels:
         mat_labels = mat['Video']['Labels'][0][0][0]
@@ -223,6 +226,9 @@ def aggregated_skeletion(file_names=['training1', 'training2', 'training3',
 
 
 if __name__ == '__main__':
-    from preprocessing import agg_movement_intervals
+    skeletion_from_archive('test1', is_test=False, verbose=True)
+    #extract_skeletion_from_files(file_names=['test1', 'test2', 'test3',
+    #    'test4', 'test5', 'test6'], is_test=False)
+    #from preprocessing import agg_movement_intervals
     #extract_skeletion_from_files()
-    agg_movement_intervals('training1')
+    #agg_movement_intervals('training1')
