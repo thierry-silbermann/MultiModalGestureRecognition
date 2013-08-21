@@ -654,11 +654,11 @@ def submission(submission_table_filename):
     output.close()
 
 def main():
-    root = 'data/raw' # /home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition/
-    '''
+    root = 'data/raw_data' #/home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition/
+    
     #Training part
     wav_list = []
-    for directory in ['training1', 'training2', 'training3', 'training4']: #'validation1_lab', 'validation2_lab', 'validation3_lab'
+    for directory in ['training1', 'training2', 'training3', 'training4', 'validation1_lab', 'validation2_lab', 'validation3_lab']: #'validation1_lab', 'validation2_lab', 'validation3_lab'
         wav_list += getAllWav(directory, True, root)
     wav_list.sort() #Just in case
 
@@ -670,7 +670,7 @@ def main():
     
     #Predicting part
     wav_list = []
-    for directory in ['validation1', 'validation2', 'validation3']: #test1, test2, test3, test4, test5, test6
+    for directory in ['test1', 'test2', 'test3', 'test4', 'test5', 'test6']: #, 'validation2', 'validation3' #test1, test2, test3, test4, test5, test6
         wav_list += getAllWav(directory, True, root)
     wav_list.sort() #Just in case
     
@@ -680,8 +680,8 @@ def main():
     print '=> Full prediction: 41mn'
     submission_table_filename = 'Submission_table.csv'
     blend_model(wav_list, submission_table_filename)
-    '''
-    submission_table_filename = 'final_Submission_table.csv'
+
+    #submission_table_filename = 'final_Submission_table.csv'
     submission(submission_table_filename)
     
     print 'See Submission.csv for prediction'
