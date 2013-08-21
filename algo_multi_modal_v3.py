@@ -543,6 +543,7 @@ def create_predicting_feature(path, wav, clf_gb, clf_rf, gradient_boosting_model
     X_test = X_test[:, 1:123]   # shape(x, 122)
     X_test = X_test.astype(np.float32, copy=False)
     class_proba = gradient_boosting_model_gestures.predict_proba(X_test)
+    print 'nb of labels', len(labels)
     
     def get_class_proba_sound(clf_gb, clf_rf, data, interval, numFrames):
     
@@ -552,6 +553,7 @@ def create_predicting_feature(path, wav, clf_gb, clf_rf, gradient_boosting_model
         for i, inter in enumerate(interval):
             name, (beg, end) = inter
             space = end - beg - 9
+            print 'space:', space
             limit = 40
             data_interval = np.zeros(40*coeff)
             if(space > limit):
@@ -559,7 +561,7 @@ def create_predicting_feature(path, wav, clf_gb, clf_rf, gradient_boosting_model
             else:
                 data_interval[:space*coeff] = data[(beg-1)*coeff:(end-10)*coeff]
             ceps, mspec, spec = mf.mfcc(data_interval)
-            #print ceps.shape, mspec.shape, spec.shape
+            print 'ceps, mspec, spec', ceps.shape, mspec.shape, spec.shape
             X[i, :2587] = ceps.reshape(2587)
             #X[i, 2587:10547] = mspec.reshape(7960)
             #X[i, 10547:22835] = spec.reshape(12288)
@@ -630,7 +632,7 @@ def submission(submission_table_filename):
     output = open('Submission.csv','wb', ) #Submission.csv
     output.write('Id,Sequence\n') 
     for i in uniq_ID:
-        output.write('0%d,' %(i))
+        output.write('%s,' %(str(i).zfill(4)))
         index = np.where(ID==i)[0]
         class_proba = final_proba[index]
     
@@ -655,7 +657,7 @@ def submission(submission_table_filename):
 
 def main():
     root = 'data/raw_data' #/home/thierrysilbermann/Documents/Kaggle/11_Multi_Modal_Gesture_Recognition/
-    
+    '''
     #Training part
     wav_list = []
     for directory in ['training1', 'training2', 'training3', 'training4', 'validation1_lab', 'validation2_lab', 'validation3_lab']: #'validation1_lab', 'validation2_lab', 'validation3_lab'
@@ -673,10 +675,11 @@ def main():
     for directory in ['test1', 'test2', 'test3', 'test4', 'test5', 'test6']: #, 'validation2', 'validation3' #test1, test2, test3, test4, test5, test6
         wav_list += getAllWav(directory, True, root)
     wav_list.sort() #Just in case
-    
-    #wav_list = getOneWav(root, 'training1', 'Sample00001') # Uncomment this line and 
+    '''
+    wav_list = getOneWav(root, 'test3', 'Sample00916')
+    wav_list += getOneWav(root, 'test3', 'Sample00917') # Uncomment this line and 
                                                             # comment the previous three line to do prediction on one sample
-   
+    
     print '=> Full prediction: 41mn'
     submission_table_filename = 'Submission_table.csv'
     blend_model(wav_list, submission_table_filename)
