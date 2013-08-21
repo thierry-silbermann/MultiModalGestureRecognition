@@ -13,6 +13,7 @@ The library dependencies are normally
 - Numpy 1.7.1
 - Scipy 0.11.0
 - Scikit-learn 0.13.1
+- scikits.talkbox
 
 Actual Model with Blending of 3 models
 ------------
