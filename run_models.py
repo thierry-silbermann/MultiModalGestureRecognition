@@ -100,19 +100,19 @@ def run_final_model():
             'validation1_lab', 'validation2_lab', 'validation3_lab']
     predict_on = ['test1', 'test2', 'test3', 'test4', 'test5', 'test6']
 
-    #train_audio_models(train_on, predict_on, path_to_audio_intervals, root)
+    train_audio_models(train_on, predict_on, path_to_audio_intervals, root)
 
     train_movement_model_and_merge_on_audio_interval(train_on, predict_on,
             path_to_audio_intervals, path_to_movement_model_with_audio_interval)
 
     merge_models(path_to_audio_intervals, path_to_movement_model_with_audio_interval)
 
-    submission('final_'+path_to_audio_intervals)
+    submission('final_'+path_to_audio_intervals) # -> Will produce a 'Kaggle_Submission.csv' file
 
 
 if __name__ == '__main__':
 
     run_final_model()
-    run_val1_model()
-    run_vali2_model()
-    run_val_all_model()
+    #run_val1_model()
+    #run_vali2_model()
+    #run_val_all_model()
