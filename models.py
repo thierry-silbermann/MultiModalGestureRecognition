@@ -73,7 +73,7 @@ def movement_interval(train_on=['training1','training2', 'training3', 'training4
     X = X.fillna(0)
     y = np.array([gesture_to_id[gest] for gest in y])
 
-    clf = ExtraTreesClassifier(n_estimators=500, random_state=0,
+    clf = ExtraTreesClassifier(n_estimators=1500, random_state=0,
         n_jobs=-1)
     clf.fit(X, y)
     del X
