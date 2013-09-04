@@ -12,15 +12,15 @@ from joblib import Memory, Parallel, delayed
 memory = Memory('cache/')
 
 
-def skeletion_from_mat(mat):
+def skeletion_from_mat(mat, is_test_file):
 
     df = DataFrame()
     Frames = mat['Video']['Frames'][0][0][0]
 
-    if 'Labels' in  mat['Video']:
-        has_labels = mat['Video']['Labels'][0][0].shape[1] > 0
-    else: 
+    if is_test_file:
         has_labels = False
+    else:
+        has_labels = mat['Video']['Labels'][0][0].shape[1] > 0
 
     if has_labels:
         mat_labels = mat['Video']['Labels'][0][0][0]
@@ -51,6 +51,7 @@ def skeletion_from_mat(mat):
 def skeletion_from_archive(filename, is_test=False, verbose=False):
 
     file_path = 'data/raw_data/' + filename + '.tar.gz'
+    is_test_file = 'test' in filename
     print file_path
     df = DataFrame()
     tar_file = tarfile.open(file_path, 'r:gz')
@@ -75,7 +76,7 @@ def skeletion_from_archive(filename, is_test=False, verbose=False):
                     zfile.extract(fname)
                     mat=scipy.io.loadmat(fname)
                     os.remove(fname)
-                    tmp = skeletion_from_mat(mat)
+                    tmp = skeletion_from_mat(mat,is_test_file)
 
                     tmp['sample_id'] = fname.split('_')[0]
                     df = pd.concat([df, tmp], axis=0)
