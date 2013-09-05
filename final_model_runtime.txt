@@ -1,0 +1,128 @@
+________________________________________________________________________________
+[Memory] Calling models.movement_interval-alias...
+movement_interval-alias(train_on=['training1',
+'training2',
+'training3',
+'training4',
+'validation1_lab',
+'validation2_lab',
+'validation3_lab'], predict_on=['test1', 'test2', 'test3', 'test4', 'test5', 'test6'])
+aggregated_skeletion_win
+________________________________________________________________________________
+[Memory] Calling preprocessing.aggregated_skeletion_win-alias...
+aggregated_skeletion_win-alias(['test1', 'test2', 'test3', 'test4', 'test5', 'test6'], agg_functions=['median', 'var', 'min', 'max'], window_shift=5, window_length=40)
+________________________________________________________________________________
+[Memory] Calling preprocessing.preprocessed_skeleton-alias...
+preprocessed_skeleton-alias('test2', train_id=False, keep_only_top_40=False, window_shift=5, window_length=40, dummy_gesture=True)
+________________________________________________________________________________
+[Memory] Calling preprocessing.skeletion_from_archive...
+skeletion_from_archive('test2')
+data/raw_data/test2.tar.gz
+_______________________________________skeletion_from_archive - 1701.3s, 28.4min
+__________________________________preprocessed_skeleton-alias - 1775.6s, 29.6min
+________________________________________________________________________________
+[Memory] Calling preprocessing.preprocessed_skeleton-alias...
+preprocessed_skeleton-alias('test3', train_id=False, keep_only_top_40=False, window_shift=5, window_length=40, dummy_gesture=True)
+________________________________________________________________________________
+[Memory] Calling preprocessing.skeletion_from_archive...
+skeletion_from_archive('test3')
+data/raw_data/test3.tar.gz
+_______________________________________skeletion_from_archive - 1899.4s, 31.7min
+__________________________________preprocessed_skeleton-alias - 1978.1s, 33.0min
+________________________________________________________________________________
+[Memory] Calling preprocessing.preprocessed_skeleton-alias...
+preprocessed_skeleton-alias('test4', train_id=False, keep_only_top_40=False, window_shift=5, window_length=40, dummy_gesture=True)
+________________________________________________________________________________
+[Memory] Calling preprocessing.skeletion_from_archive...
+skeletion_from_archive('test4')
+data/raw_data/test4.tar.gz
+_______________________________________skeletion_from_archive - 1442.5s, 24.0min
+__________________________________preprocessed_skeleton-alias - 1511.5s, 25.2min
+________________________________________________________________________________
+[Memory] Calling preprocessing.preprocessed_skeleton-alias...
+preprocessed_skeleton-alias('test5', train_id=False, keep_only_top_40=False, window_shift=5, window_length=40, dummy_gesture=True)
+________________________________________________________________________________
+[Memory] Calling preprocessing.skeletion_from_archive...
+skeletion_from_archive('test5')
+data/raw_data/test5.tar.gz
+_______________________________________skeletion_from_archive - 1673.3s, 27.9min
+__________________________________preprocessed_skeleton-alias - 1744.5s, 29.1min
+________________________________________________________________________________
+[Memory] Calling preprocessing.preprocessed_skeleton-alias...
+preprocessed_skeleton-alias('test6', train_id=False, keep_only_top_40=False, window_shift=5, window_length=40, dummy_gesture=True)
+________________________________________________________________________________
+[Memory] Calling preprocessing.skeletion_from_archive...
+skeletion_from_archive('test6')
+data/raw_data/test6.tar.gz
+________________________________________skeletion_from_archive - 775.9s, 12.9min
+___________________________________preprocessed_skeleton-alias - 820.3s, 13.7min
+______________________________aggregated_skeletion_win-alias - 7867.1s, 131.1min
+train rf model
+________________________________________________________________________________
+[Memory] Calling preprocessing.aggregated_skeletion-alias...
+aggregated_skeletion-alias(agg_functions=['median', 'var', 'min', 'max'], file_names=['training1',
+'training2',
+'training3',
+'training4',
+'validation1_lab',
+'validation2_lab',
+'validation3_lab'])
+________________________________________________________________________________
+[Memory] Calling preprocessing.preprocessed_skeleton-alias...
+preprocessed_skeleton-alias('training2', window_length=40)
+________________________________________________________________________________
+[Memory] Calling preprocessing.skeletion_from_archive...
+skeletion_from_archive('training2')
+data/raw_data/training2.tar.gz
+_______________________________________skeletion_from_archive - 3828.0s, 63.8min
+__________________________________preprocessed_skeleton-alias - 3846.4s, 64.1min
+________________________________________________________________________________
+[Memory] Calling preprocessing.preprocessed_skeleton-alias...
+preprocessed_skeleton-alias('training3', window_length=40)
+________________________________________________________________________________
+[Memory] Calling preprocessing.skeletion_from_archive...
+skeletion_from_archive('training3')
+data/raw_data/training3.tar.gz
+_______________________________________skeletion_from_archive - 5147.7s, 85.8min
+__________________________________preprocessed_skeleton-alias - 5163.4s, 86.1min
+________________________________________________________________________________
+[Memory] Calling preprocessing.preprocessed_skeleton-alias...
+preprocessed_skeleton-alias('training4', window_length=40)
+________________________________________________________________________________
+[Memory] Calling preprocessing.skeletion_from_archive...
+skeletion_from_archive('training4')
+data/raw_data/training4.tar.gz
+_______________________________________skeletion_from_archive - 4236.4s, 70.6min
+__________________________________preprocessed_skeleton-alias - 4254.0s, 70.9min
+________________________________________________________________________________
+[Memory] Calling preprocessing.preprocessed_skeleton-alias...
+preprocessed_skeleton-alias('validation1_lab', window_length=40)
+________________________________________________________________________________
+[Memory] Calling preprocessing.skeletion_from_archive...
+skeletion_from_archive('validation1_lab')
+data/raw_data/validation1_lab.tar.gz
+______________________________________skeletion_from_archive - 6033.6s, 100.6min
+_________________________________preprocessed_skeleton-alias - 6051.4s, 100.9min
+________________________________________________________________________________
+[Memory] Calling preprocessing.preprocessed_skeleton-alias...
+preprocessed_skeleton-alias('validation2_lab', window_length=40)
+________________________________________________________________________________
+[Memory] Calling preprocessing.skeletion_from_archive...
+skeletion_from_archive('validation2_lab')
+data/raw_data/validation2_lab.tar.gz
+______________________________________skeletion_from_archive - 7096.7s, 118.3min
+_________________________________preprocessed_skeleton-alias - 7120.6s, 118.7min
+________________________________________________________________________________
+[Memory] Calling preprocessing.preprocessed_skeleton-alias...
+preprocessed_skeleton-alias('validation3_lab', window_length=40)
+________________________________________________________________________________
+[Memory] Calling preprocessing.skeletion_from_archive...
+skeletion_from_archive('validation3_lab')
+data/raw_data/validation3_lab.tar.gz
+_______________________________________skeletion_from_archive - 5839.8s, 97.3min
+__________________________________preprocessed_skeleton-alias - 5864.4s, 97.7min
+_________________________________aggregated_skeletion-alias - 32323.2s, 538.7min
+rf predict
+____________________________________movement_interval-alias - 41044.5s, 684.1min
+move model done
+Four models blending
